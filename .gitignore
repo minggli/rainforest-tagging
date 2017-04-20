@@ -1,0 +1,24 @@
+.DS_Store
+*.pyc
+*.pyo
+*.csv
+*.jpg
+*.dat
+*.zip
+*.vec
+env
+env*
+dist
+build
+*.egg
+*.egg-info
+_mailinglist
+.tox
+.cache/
+.idea/
+
+# Coverage reports
+htmlcov
+.coverage
+.coverage.*
+*,cover
