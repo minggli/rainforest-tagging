@@ -2,10 +2,16 @@
 *.pyc
 *.pyo
 *.csv
-*.jpg
 *.dat
 *.zip
 *.vec
+
+# image data
+*.jpg
+*.tiff
+*.tif
+*.7z
+
 env
 env*
 dist
