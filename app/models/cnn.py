@@ -2,23 +2,18 @@
 """
 cnn
 
-template atop tensorflow for buliding Convolutional Neural Network
+template built atop tensorflow for constructing Convolutional Neural Network
 """
-import operator
-import functools
+
 import tensorflow as tf
 
 
 class ConvolutionalNeuralNet:
 
-    def __init__(self, shape):
+    def __init__(self, shape, num_classes):
         """shape: [n_samples, channels, n_features]"""
-        self.shape = shape
-        self.flattened_shape = (
-                                None,
-                                shape[2],
-                                functools.reduce(operator.mul, shape[:2], 1)
-                                )
+        self._shape = shape
+        self._n_class = num_classes
 
     @staticmethod
     def weight_variable(shape):
@@ -32,12 +27,26 @@ class ConvolutionalNeuralNet:
 
     @staticmethod
     def conv2d(x, W):
-        return tf.nn.conv2d(x, W, strides=[1, 1, 1, 1], padding='SAME')
+        """
+        core operation that convolves through image data and extract features
+        input: takes a 4-D shaped tensor e.g. (-1, 90, 160, 3)
+        receptive field (filter): filter size and number of output channels are
+            inferred from weight hyperparams.
+        receptive field moves by 1 pixel at a time during convolution.
+        Zero Padding algorthm appies to keep output size the same
+            e.g. 3x3xn filter with 1 zero-padding, 5x5 2, 7x7 3 etc.
+        """
+        return tf.nn.conv2d(input=x,
+                            filter=W,
+                            strides=[1, 1, 1, 1],
+                            padding='SAME')
 
     @staticmethod
     def max_pool(x):
         """max pooling with kernal size 2x2 and slide by 2 pixels each time"""
-        return tf.nn.max_pool(x, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1],
+        return tf.nn.max_pool(value=x,
+                              ksize=[1, 2, 2, 1],
+                              strides=[1, 2, 2, 1],
                               padding='SAME')
 
     @staticmethod
@@ -50,19 +59,17 @@ class ConvolutionalNeuralNet:
     @property
     def x(self):
         """feature set"""
-        return tf.reshape(tf.placeholder(
-            dtype=tf.float32,
-            shape=self.flattened_shape,
-            name='feature'
-        ),
-            # transform 3D shape to 4D
-            (-1, ) + self.shape
-        )
+        return tf.placeholder(dtype=tf.float32,
+                              # transform 3D shape to 4D to include batch size
+                              shape=(None, ) + self._shape,
+                              name='feature')
 
     @property
-    def _y(self):
+    def y_(self):
         """true label, in one hot format"""
-        return tf.placeholder(dtype=tf.float32, shape=[None, 8], name='label')
+        return tf.placeholder(dtype=tf.float32,
+                              shape=(None, self._n_class),
+                              name='label')
 
     # @property
     # def keep_prob(self):
@@ -94,7 +101,6 @@ class ConvolutionalNeuralNet:
 
     def add_drop_out_layer(self, input_layer, keep_prob):
         """drop out layer to reduce overfitting"""
-        # keep_prob = self.keep_prob
         hypothesis_drop = tf.nn.dropout(input_layer, keep_prob)
         return hypothesis_drop
 
