@@ -29,7 +29,7 @@ def timeit(func):
 
 @timeit
 @multithreading
-def train(n, sess, x, _y, keep_prob, train_image_batch, train_label_batch,
+def train(n, sess, x, y_, keep_prob, train_image_batch, train_label_batch,
           valid_image_batch, valid_label_batch, optimiser, metric, loss):
     """train neural network and produce accuracies with validation set."""
 
@@ -37,7 +37,7 @@ def train(n, sess, x, _y, keep_prob, train_image_batch, train_label_batch,
         train_image, train_label = \
                             sess.run([train_image_batch, train_label_batch])
         optimiser.run(feed_dict={
-                            x: train_image, _y: train_label, keep_prob: .5})
+                            x: train_image, y_: train_label, keep_prob: .5})
         print(global_step, train_label[0])
 
         if global_step % 10 == 0:
@@ -45,7 +45,7 @@ def train(n, sess, x, _y, keep_prob, train_image_batch, train_label_batch,
                 sess.run([valid_image_batch, valid_label_batch])
             training_accuracy, loss_score = \
                 sess.run([metric, loss], feed_dict={x: valid_image,
-                         _y: valid_label, keep_prob: 1.0})
+                         y_: valid_label, keep_prob: 1.0})
             print("step {0} of {3}, valid accuracy: {1:.4f}, "
                   "log loss: {2:.4f}".format(global_step,
                                              training_accuracy,

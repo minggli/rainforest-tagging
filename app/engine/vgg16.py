@@ -11,9 +11,9 @@ from ..controllers import (train, save_session, predict, submit,
                            restore_session)
 
 sess = tf.Session()
-cnn = ConvolutionalNeuralNet(shape=IMAGE_SHAPE)
+cnn = ConvolutionalNeuralNet(shape=IMAGE_SHAPE, num_classes=8)
 
-x, _y = cnn.x, cnn._y
+x, y_ = cnn.x, cnn.y_
 keep_prob = tf.placeholder(tf.float32)
 
 conv_layer_1 = cnn.add_conv_layer(x, [[3, 3, 3, 6], [6]])
@@ -44,14 +44,14 @@ logits = cnn.add_read_out_layer(fc2, [[128, 8], [8]])
 
 # default loss function
 cross_entropy = \
-        tf.nn.softmax_cross_entropy_with_logits(logits=logits, labels=_y)
+        tf.nn.softmax_cross_entropy_with_logits(logits=logits, labels=y_)
 loss = tf.reduce_mean(cross_entropy)
 
 # applying label weights to loss function
 if False:
     class_weight = tf.constant([[0.545, 0.947, 0.969, 0.982, 0.877, 0.921,
                                  0.953, 0.806]])
-    weight_per_label = tf.transpose(tf.matmul(_y, tf.transpose(class_weight)))
+    weight_per_label = tf.transpose(tf.matmul(y_, tf.transpose(class_weight)))
     loss = tf.reduce_mean(tf.multiply(weight_per_label, cross_entropy))
 
 # add L2 regularization on weights from readout layer
@@ -65,7 +65,7 @@ if True:
 train_step = tf.train.RMSPropOptimizer(learning_rate=ALPHA).minimize(loss)
 
 # eval
-correct_prediction = tf.equal(tf.argmax(logits, 1), tf.argmax(_y, 1))
+correct_prediction = tf.equal(tf.argmax(logits, 1), tf.argmax(y_, 1))
 accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 
 # saver
@@ -95,7 +95,7 @@ if TRAIN:
     sess.run(init_op)
 
     with sess:
-        train(MAX_STEPS, sess, x, _y, keep_prob, train_image_batch,
+        train(MAX_STEPS, sess, x, y_, keep_prob, train_image_batch,
               train_label_batch, valid_image_batch, valid_label_batch,
               train_step, accuracy, loss)
         save_session(sess, path=MODEL_PATH, sav=saver)
