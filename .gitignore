@@ -23,6 +23,7 @@ _mailinglist
 .cache/
 .idea/
 
+
 # Coverage reports
 htmlcov
 .coverage
