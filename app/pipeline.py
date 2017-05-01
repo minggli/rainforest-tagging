@@ -13,11 +13,11 @@ import numpy as np
 import pandas as pd
 import tensorflow as tf
 
-from sklearn import model_selection
+from sklearn import model_selection, preprocessing
 
 
 def folder_traverse(root_dir, ext=('.jpg')):
-    """map all image files recusively from root directory"""
+    """recusively map all image files from root directory"""
 
     if not os.path.exists(root_dir):
         raise RuntimeError('{0} doesn\'t exist.'.format(root_dir))
@@ -31,26 +31,41 @@ def folder_traverse(root_dir, ext=('.jpg')):
     return file_structure
 
 
-def generate_data_skeleton(root_dir, valid_size=None):
+def generate_data_skeleton(root_dir, ext=('.jpg', '.csv'), valid_size=None):
     """turn file structure into human-readable pandas dataframe"""
-    file_structure = folder_traverse(root_dir)
-    reversed_fs = {k + '/' + f: os.path.split(k)[1]
+    file_structure = folder_traverse(root_dir, ext=ext)
+    reversed_fs = {k + '/' + f: os.path.splitext(f)[0]
                    for k, v in file_structure.items() for f in v}
-    df = pd.DataFrame.from_dict(data=reversed_fs, orient='index').reset_index()
-    df.rename(columns={'index': 'filename', 0: 'species'}, inplace=True)
-    df.sort_values(by=['species', 'filename'], inplace=True)
-    df.reset_index(inplace=True, drop=True)
-    df['labels'] = df['species'].astype('category').cat.codes
 
-    X, y = np.array(df['filename']), np.array(df['labels'])
+    for key in reversed_fs:
+        if key.endswith('.csv'):
+            df_train_labels = pd.read_csv(key)
+            reversed_fs.pop(key)
+            break
+
+    df = pd.DataFrame.from_dict(data=reversed_fs, orient='index').reset_index()
+    df.rename(columns={'index': 'path_to_file', 0: 'filename'}, inplace=True)
+    df.sort_values(by=['path_to_file', 'filename'], inplace=True)
+    df.reset_index(inplace=True, drop=True)
+
+    df = df.merge(right=df_train_labels,
+                  how='left',
+                  left_on='filename',
+                  right_on='image_name')
+    train_labels = [string.split(' ') for string in df['tags'].tolist()]
+    mlb = preprocessing.MultiLabelBinarizer()
+    mlb.fit(train_labels)
+    print('tags transformed to one hot encoding: \n{0}'.format(mlb.classes_))
+    X = np.array(df['path_to_file'])
+    y = mlb.transform(train_labels)
 
     if valid_size:
         X_train, X_valid, y_train, y_valid = model_selection.train_test_split(
-            X, y, test_size=valid_size, stratify=y)
+            X, y, test_size=valid_size)
         print('training: {0} samples; validation: {1} samples.'.format(
             X_train.shape[0], X_valid.shape[0]))
         return X_train, y_train, X_valid, y_valid
-    else:
+    elif not valid_size:
         print('test: {0} samples.'.format(X.shape[0]))
         return X, y
 
@@ -71,20 +86,14 @@ def decode_transform(input_queue, shape=None, standardize=True):
     mean centralisation."""
     # input_queue allows slicing with 0: path_to_image, 1: encoded label
     label_queue = input_queue[1]
-    one_hot_label_queue = tf.one_hot(
-                                indices=label_queue,
-                                depth=8,
-                                on_value=1,
-                                off_value=0)
-
     image_queue = tf.read_file(input_queue[0])
     original_image = tf.image.decode_jpeg(image_queue, channels=shape[2])
 
-    # crop larger images (e.g. 1280*974) to 1280*720, this func doesn't resize.
+    # crop larger images to 256*256, this func doesn't 'resize'.
     cropped_image_content = tf.image.resize_image_with_crop_or_pad(
                                 image=original_image,
-                                target_height=720,
-                                target_width=1280)
+                                target_height=256,
+                                target_width=256)
 
     # resize cropped images to desired shape
     resize_image_content = tf.image.resize_images(
@@ -101,7 +110,7 @@ def decode_transform(input_queue, shape=None, standardize=True):
     elif not standardize:
         processed_image = resize_image_content
 
-    return processed_image, one_hot_label_queue
+    return processed_image, label_queue
 
 
 def batch_generator(image, label, batch_size=None, shuffle=True):
