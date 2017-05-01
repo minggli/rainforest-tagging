@@ -11,6 +11,8 @@
 *.tiff
 *.tif
 *.7z
+*.tar
+
 
 env
 env*
@@ -22,7 +24,7 @@ _mailinglist
 .tox
 .cache/
 .idea/
-
+data/
 
 # Coverage reports
 htmlcov
