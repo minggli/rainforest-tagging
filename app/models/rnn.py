@@ -11,26 +11,25 @@ import tensorflow as tf
 
 class RecurrentNeuralNet:
 
-    def __init__(self, cell_type, num_nodes):
-        self.type = cell_type
-        self.nodes = num_nodes
+    def __init__(self, state_size, num_classes):
+
+        self._state_size = state_size
+        self._n_class = num_classes
 
     @property
     def x(self):
         """feature set"""
-        return tf.reshape(tf.placeholder(
-            dtype=tf.float32,
-            shape=self.flattened_shape,
-            name='feature'
-        ),
-            # transform 3D shape to 4D
-            (-1, ) + self.shape
-        )
+        return tf.placeholder(
+                            dtype=tf.float32,
+                            shape=(-1, ) + self.shape,
+                            name='feature')
 
     @property
     def y_(self):
         """true label, in one hot format"""
-        return tf.placeholder(dtype=tf.float32, shape=[None, 8], name='label')
+        return tf.placeholder(dtype=tf.float32,
+                              shape=(None, self._n_class),
+                              name='multi-label')
 
     @staticmethod
     def weight_variable(shape):
@@ -42,22 +41,15 @@ class RecurrentNeuralNet:
         initial = tf.constant(0.1, shape=shape)
         return tf.Variable(initial)
 
-    def cell(self):
-        """vanila RNN cell or LSTM cell (Hochreiter & Schmidhuber 1997)
-        with forget, input, and output gates. """
+    def lstm_cell(self):
+        """LSTM implementation by Hochreiter & Schmidhuber (1997)."""
+        return tf.contrib.rnn.LSTMCell(num_units=self.nodes,
+                                       activation=tf.tanh,
+                                       use_peepholes=False)
 
-        if self.type == 'RNN':
-            return tf.contrib.rnn.BasicRNNCell(
-                                            num_units=self.nodes,
-                                            activation=tf.tanh)
-        elif self.type == 'LSTM':
-            return tf.contrib.rnn.LSTMCell(num_units=self.nodes,
-                                           activation=tf.tanh,
-                                           use_peepholes=False)
-
-    def _unrolled_rnn(self):
-        """dynamic_rnn padd sequential input of different sizes."""
-        outputs, state = tf.nn.dynamic_rnn(cell=self.cell,
+    def lstm(self):
+        """dynamic_rnn pad sequential input of different sizes."""
+        outputs, state = tf.nn.dynamic_rnn(cell=self.lstm_cell,
                                            inputs=self.x,
                                            dtype=tf.float32)
         return outputs, state
