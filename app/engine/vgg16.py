@@ -11,7 +11,7 @@ from ..controllers import (train, save_session, predict, submit,
                            restore_session)
 
 sess = tf.Session()
-cnn = ConvolutionalNeuralNet(shape=IMAGE_SHAPE, num_classes=8)
+cnn = ConvolutionalNeuralNet(shape=IMAGE_SHAPE, num_classes=17)
 
 x, y_ = cnn.x, cnn.y_
 keep_prob = tf.placeholder(tf.float32)
