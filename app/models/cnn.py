@@ -8,7 +8,7 @@ template built atop tensorflow for constructing Convolutional Neural Network
 import tensorflow as tf
 
 
-class ConvolutionalNeuralNet:
+class ConvolutionalNeuralNetwork:
 
     def __init__(self, shape, num_classes):
         """shape: [n_samples, channels, n_features]"""
