@@ -3,7 +3,7 @@
 import tensorflow as tf
 
 from ..main import EVAL, TRAIN
-from ..models.cnn import ConvolutionalNeuralNet
+from ..models.cnn import ConvolutionalNeuralNetwork
 from ..settings import (IMAGE_PATH, IMAGE_SHAPE, BATCH_SIZE, MODEL_PATH,
                         MAX_STEPS, ALPHA, BETA)
 from ..pipeline import data_pipe, generate_data_skeleton
@@ -11,7 +11,7 @@ from ..controllers import (train, save_session, predict, submit,
                            restore_session)
 
 sess = tf.Session()
-cnn = ConvolutionalNeuralNet(shape=IMAGE_SHAPE, num_classes=17)
+cnn = ConvolutionalNeuralNetwork(shape=IMAGE_SHAPE, num_classes=17)
 
 x, y_ = cnn.x, cnn.y_
 keep_prob = tf.placeholder(tf.float32)
