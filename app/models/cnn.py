@@ -50,11 +50,13 @@ class ConvolutionalNeuralNet:
                               padding='SAME')
 
     @staticmethod
-    def non_linearity(activation_func):
-        if activation_func == 'sigmoid':
+    def non_linearity(activation):
+        if activation == 'sigmoid':
             return tf.nn.sigmoid
-        elif activation_func == 'relu':
+        elif activation == 'relu':
             return tf.nn.relu
+        elif activation == 'tanh':
+            return tf.tanh
 
     @property
     def x(self):
@@ -77,26 +79,26 @@ class ConvolutionalNeuralNet:
 
     def add_conv_layer(self, input_layer, hyperparams, func='relu'):
         """Convolution Layer with hyperparamters and activation_func"""
-        W = self.__class__.weight_variable(shape=hyperparams[0])
-        b = self.__class__.bias_variable(shape=hyperparams[1])
+        W = self.weight_variable(shape=hyperparams[0])
+        b = self.bias_variable(shape=hyperparams[1])
 
-        hypothesis_conv = self.__class__.non_linearity(func)(
-            self.__class__.conv2d(input_layer, W) + b)
+        hypothesis_conv = self.non_linearity(func)(
+            self.conv2d(input_layer, W) + b)
         return hypothesis_conv
 
     def add_pooling_layer(self, input_layer):
         """max pooling layer to reduce overfitting"""
-        hypothesis_pool = self.__class__.max_pool(input_layer)
+        hypothesis_pool = self.max_pool(input_layer)
         return hypothesis_pool
 
     def add_dense_layer(self, input_layer, hyperparams, func='relu'):
         """Densely Connected Layer with hyperparamters and activation_func"""
-        W = self.__class__.weight_variable(shape=hyperparams[0])
-        b = self.__class__.bias_variable(shape=hyperparams[1])
+        W = self.weight_variable(shape=hyperparams[0])
+        b = self.bias_variable(shape=hyperparams[1])
 
         flat_x = tf.reshape(input_layer, hyperparams[2])
         hypothesis = \
-            self.__class__.non_linearity(func)(tf.matmul(flat_x, W) + b)
+            self.non_linearity(func)(tf.matmul(flat_x, W) + b)
         return hypothesis
 
     def add_drop_out_layer(self, input_layer, keep_prob):
@@ -106,8 +108,8 @@ class ConvolutionalNeuralNet:
 
     def add_read_out_layer(self, input_layer, hyperparams):
         """read out layer"""
-        W = self.__class__.weight_variable(shape=hyperparams[0])
-        b = self.__class__.bias_variable(shape=hyperparams[1])
+        W = self.weight_variable(shape=hyperparams[0])
+        b = self.bias_variable(shape=hyperparams[1])
 
         logits = tf.matmul(input_layer, W) + b
         return logits
