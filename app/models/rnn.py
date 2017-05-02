@@ -3,7 +3,7 @@
 rnn
 
 model built atop tensorflow for constructing Recurrent Neural Network (RNN) and
-Long Short-Term Memory (LSTM) architecture
+Long Short-Term Memory (LSTM)
 """
 
 import tensorflow as tf
@@ -88,7 +88,7 @@ class RNN(_BaseRNN):
         super(RNN, self).__init__(state_size, num_classes)
 
     def __call__(self, rnn_input, state):
-        """RNN implementation to Colah's blog (2015)."""
+        """RNN cell implementation to Colah's blog (2015)."""
         with tf.variable_scope('default_rnn_cell', reuse=None):
             W_hx = self.get_weight_variable(name='W_hx')
             W_hh = self.get_weight_variable(name='W_hh')
@@ -107,7 +107,7 @@ class LSTM(_BaseRNN):
         super(LSTM, self).__init__(state_size, num_classes)
 
     def __call__(self, cell_input, cell_output, cell_state):
-        """LSTM implemented to Hochreiter & Schmidhuber (1997)"""
+        """LSTM cell implemented to Hochreiter & Schmidhuber (1997)"""
         with tf.variable_scope('default_lstm_cell', reuse=None):
             forget_W_hx = self.get_weight_variable(name='forget_W_hx')
             forget_W_hh = self.get_weight_variable(name='forget_W_hh')
@@ -134,9 +134,9 @@ class LSTM(_BaseRNN):
                         tf.matmul(cell_input, cell_state_W_hx) +
                         tf.matmul(cell_output, cell_state_W_hh) +
                         cell_state_b_h)
+
         # cell memory forgets old information and learns new information
-        cell_state_t = \
-            forget_gate * cell_state + input_gate * cell_state_delta
+        cell_state_t = forget_gate * cell_state + input_gate * cell_state_delta
 
         output_gate = tf.sigmoid(
                       tf.matmul(cell_input, output_W_hx) +

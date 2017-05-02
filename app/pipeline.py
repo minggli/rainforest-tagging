@@ -87,28 +87,26 @@ def decode_transform(input_queue, shape=None, standardize=True):
     # input_queue allows slicing with 0: path_to_image, 1: encoded label
     label_queue = input_queue[1]
     image_queue = tf.read_file(input_queue[0])
-    original_image = tf.image.decode_jpeg(image_queue, channels=shape[2])
+    original_img = tf.image.decode_jpeg(image_queue, channels=shape[2])
 
     # crop larger images to 256*256, this func doesn't 'resize'.
-    cropped_image_content = tf.image.resize_image_with_crop_or_pad(
-                                image=original_image,
+    cropped_img = tf.image.resize_image_with_crop_or_pad(
+                                image=original_img,
                                 target_height=256,
                                 target_width=256)
 
     # resize cropped images to desired shape
-    resize_image_content = tf.image.resize_images(
-                                images=cropped_image_content,
+    resized_img = tf.image.resize_images(
+                                images=cropped_img,
                                 size=[shape[0], shape[1]])
 
-    resize_image_content.set_shape(shape)
+    resized_img.set_shape(shape)
 
     # apply standardization
     if standardize:
-        std_image_content = tf.image.per_image_standardization(
-                                resize_image_content)
-        processed_image = std_image_content
+        processed_image = tf.image.per_image_standardization(resized_img)
     elif not standardize:
-        processed_image = resize_image_content
+        processed_image = resized_img
 
     return processed_image, label_queue
 
