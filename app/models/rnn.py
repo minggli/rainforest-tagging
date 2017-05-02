@@ -9,20 +9,19 @@ Long Short-Term Memory (LSTM) architecture
 import tensorflow as tf
 
 
-class RecurrentNeuralNetwork:
+class _BaseRNN(object):
+    """base class recurrent neural network"""
+    def __init__(self, state_size, num_classes):
 
-    def __init__(self, state_size, num_classes, cell_type):
-
-        self._cell_type = None
         self._state_size = state_size
         self._n_class = num_classes
-        self.__cell_type__ = cell_type
 
     @property
     def x(self):
         """feature vector"""
+        # TODO !!! Needs Fix
         return tf.placeholder(dtype=tf.float32,
-                              shape=(-1, ) + self.shape,
+                              shape=(None, self._n_class),
                               name='feature')
 
     @property
@@ -37,21 +36,6 @@ class RecurrentNeuralNetwork:
         """zero state for initial state and initial output"""
         return tf.placeholder(dtype=tf.float32,
                               shape=(None, self._state_size))
-
-    @property
-    def __cell_type__(self):
-        return self._cell_type
-
-    @__cell_type__.setter
-    def __cell_type__(self, value):
-        try:
-            if value.lower() in ['rnn', 'lstm']:
-                self._cell_type = value.lower()
-            else:
-                raise RuntimeError
-        except (AttributeError, RuntimeError) as e:
-            raise Exception('Unknown cell type {0}, must be either'
-                            '"rnn" or "lstm"'.format(value))
 
     def get_weight_variable(self, name):
         """create new or reuse weight variable by variable name."""
@@ -75,20 +59,55 @@ class RecurrentNeuralNetwork:
                                shape=[self._state_size],
                                initializer=init)
 
-    def _rnn_cell(self, rnn_input, state):
+    def static_rnn(self):
+        """whereas dynamic rnn is known to be preferred due to its
+        flexibility, this static approach aims to lay foundation to dynamic rnn
+        implementation."""
+        rnn_inputs = tf.unstack(self.x, axis=1)
+        output = state = tf.zeros_like(self._zero_state, name='initial_state')
+        output_receiver = list()
+
+        if self.__class__.__name__ == 'RNN':
+            for rnn_input in rnn_inputs:
+                output, state = self.__call__(rnn_input=rnn_input, state=state)
+                output_receiver.append(output)
+        elif self.__class__.__name__ == 'LSTM':
+            for rnn_input in rnn_inputs:
+                output, state = self.__call__(cell_input=rnn_input,
+                                              cell_output=output,
+                                              cell_state=state)
+                output_receiver.append(output)
+        else:
+            raise Exception('_BaseRNN can not be called directly.')
+        return output_receiver, state
+
+
+class RNN(_BaseRNN):
+
+    def __init__(self, state_size, num_classes):
+        super(RNN, self).__init__(state_size, num_classes)
+
+    def __call__(self, rnn_input, state):
         """RNN implementation to Colah's blog (2015)."""
         with tf.variable_scope('default_rnn_cell', reuse=None):
             W_hx = self.get_weight_variable(name='W_hx')
             W_hh = self.get_weight_variable(name='W_hh')
             b_h = self.get_bias_variable(name='b_h')
 
-        output = tf.tanh(tf.matmul(rnn_input, W_hx) + tf.matmul(state, W_hh) +
+        output = tf.tanh(tf.matmul(rnn_input, W_hx) +
+                         tf.matmul(state, W_hh) +
                          b_h)
         state = output
         return output, state
 
-    def _lstm_cell(self, cell_input, cell_output, cell_state):
-        """implementation of LSTM to Hochreiter & Schmidhuber (1997)"""
+
+class LSTM(_BaseRNN):
+
+    def __init__(self, state_size, num_classes):
+        super(LSTM, self).__init__(state_size, num_classes)
+
+    def __call__(self, cell_input, cell_output, cell_state):
+        """LSTM implemented to Hochreiter & Schmidhuber (1997)"""
         with tf.variable_scope('default_lstm_cell', reuse=None):
             forget_W_hx = self.get_weight_variable(name='forget_W_hx')
             forget_W_hh = self.get_weight_variable(name='forget_W_hh')
@@ -122,42 +141,7 @@ class RecurrentNeuralNetwork:
         output_gate = tf.sigmoid(
                       tf.matmul(cell_input, output_W_hx) +
                       tf.matmul(cell_output, output_W_hh) +
-                      output_b_h
-                      )
+                      output_b_h)
+
         output = output_gate * tf.tanh(cell_state_t)
         return output, cell_state_t
-
-    def static_rnn(self):
-        """whereas dynamic rnn is known to be preferred due to its
-        flexibility, this static approach aims to lay foundation to dynamic rnn
-        implementation."""
-        rnn_inputs = tf.unstack(self.x, axis=1)
-        output = state = tf.zeros_like(self._zero_state, name='initial_state')
-        output_receiver = list()
-
-        if self._cell_type == 'rnn':
-            for rnn_input in rnn_inputs:
-                output, state = self._rnn_cell(rnn_input=rnn_input,
-                                               state=state)
-                output_receiver.append(output)
-        elif self._cell_type == 'lstm':
-            for rnn_input in rnn_inputs:
-                output, state = self._lstm_cell(cell_input=rnn_input,
-                                                cell_output=output,
-                                                cell_state=state)
-                output_receiver.append(output)
-
-        return output_receiver, state
-
-    def __lstm_cell(self):
-        """tensorflow's implementation to Hochreiter & Schmidhuber (1997)."""
-        return tf.contrib.rnn.LSTMCell(num_units=self.nodes,
-                                       activation=tf.tanh,
-                                       use_peepholes=False)
-
-    def __lstm(self):
-        """dynamic_rnn pad varying time step sizes."""
-        outputs, state = tf.nn.dynamic_rnn(cell=self.lstm_cell,
-                                           inputs=self.x,
-                                           dtype=tf.float32)
-        return outputs, state
