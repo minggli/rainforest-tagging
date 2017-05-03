@@ -55,11 +55,11 @@ def generate_data_skeleton(root_dir, ext=('.jpg', '.csv'), valid_size=None):
     train_labels = [string.split(' ') for string in df['tags'].tolist()]
     mlb = preprocessing.MultiLabelBinarizer()
     mlb.fit(train_labels)
-    print('tags transformed to one hot encoding: \n{0}'.format(mlb.classes_))
     X = np.array(df['path_to_file'])
     y = mlb.transform(train_labels)
 
     if valid_size:
+        print('tags one-hot encoded: \n{0}'.format(mlb.classes_))
         X_train, X_valid, y_train, y_valid = model_selection.train_test_split(
             X, y, test_size=valid_size)
         print('training: {0} samples; validation: {1} samples.'.format(

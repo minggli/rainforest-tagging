@@ -55,38 +55,38 @@ def train(n, sess, x, y_, keep_prob, train_image_batch, train_label_batch,
 
 @timeit
 @multithreading
-def predict(sess, x, keep_prob, logits, test_image_batch):
+def predict(sess, x, keep_prob, logits, test_image_batch, tags):
     """predict test set using graph previously trained and saved."""
     complete_probs = list()
     for _ in range(2000):
         try:
             test_image = sess.run(test_image_batch)
-            probs = sess.run(tf.nn.softmax(logits),
+            probs = sess.run(tf.round(tf.nn.sigmoid(logits)),
                              feed_dict={x: test_image, keep_prob: 1.0})
             complete_probs.append(probs)
         except tf.errors.OutOfRangeError as e:
             # pipe exhausted with pre-determined number of epochs i.e. 1
             break
-    unravelled_array = \
-        [array for nested_arrays in complete_probs for array in nested_arrays]
+    unravelled_array = [' '.join(tags[array.nonzero()])
+                        for nested_arrays in complete_probs
+                        for array in nested_arrays]
     return unravelled_array
 
 
 @timeit
-def submit(complete_probs, path):
+def submit(predicted_input, path):
     """"produce an output file with predicted probabilities."""
     now = datetime.now().strftime('%Y%m%d%H%M%S')
     template = pd.read_csv(
-                filepath_or_buffer=path + 'sample_submission_stg2.csv',
+                filepath_or_buffer=path + '/sample_submission.csv',
                 encoding='utf8',
                 index_col=0)
     df = pd.DataFrame(
-                data=complete_probs,
+                data=predicted_input,
                 columns=template.columns,
-                index=template.index,
-                dtype=float).applymap(lambda x: round(x, 6))
+                index=template.index)
     df.to_csv(
-                path + 'submission_{0}.csv'.format(now),
+                path + '/submission_{0}.csv'.format(now),
                 encoding='utf8',
                 header=True,
                 index=True)
