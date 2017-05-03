@@ -83,7 +83,7 @@ class ConvolutionalNeuralNetwork:
         b = self.bias_variable(shape=hyperparams[1])
 
         hypothesis_conv = self.non_linearity(func)(
-            self.conv2d(input_layer, W) + b)
+                          self.conv2d(input_layer, W) + b)
         return hypothesis_conv
 
     def add_pooling_layer(self, input_layer):
@@ -97,8 +97,7 @@ class ConvolutionalNeuralNetwork:
         b = self.bias_variable(shape=hyperparams[1])
 
         flat_x = tf.reshape(input_layer, hyperparams[2])
-        hypothesis = \
-            self.non_linearity(func)(tf.matmul(flat_x, W) + b)
+        hypothesis = self.non_linearity(func)(tf.matmul(flat_x, W) + b)
         return hypothesis
 
     def add_drop_out_layer(self, input_layer, keep_prob):
@@ -106,10 +105,11 @@ class ConvolutionalNeuralNetwork:
         hypothesis_drop = tf.nn.dropout(input_layer, keep_prob)
         return hypothesis_drop
 
-    def add_read_out_layer(self, input_layer, hyperparams):
+    def add_read_out_layer(self, input_layer):
         """read out layer"""
-        W = self.weight_variable(shape=hyperparams[0])
-        b = self.bias_variable(shape=hyperparams[1])
+        input_layer_m = int(input_layer.get_shape()[1])
+        W = self.weight_variable(shape=[input_layer_m, self._n_class])
+        b = self.bias_variable(shape=[self._n_class])
 
         logits = tf.matmul(input_layer, W) + b
         return logits
