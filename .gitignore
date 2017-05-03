@@ -25,6 +25,7 @@ _mailinglist
 .cache/
 .idea/
 data/
+trained_models/
 
 # Coverage reports
 htmlcov
