@@ -9,7 +9,7 @@ IMAGE_PATH = './data/'
 IMAGE_SHAPE = (128, 128, 3)
 BATCH_SIZE = 100
 MAX_STEPS = 500
-ALPHA = 1e-4
+ALPHA = 1e-3
 BETA = 1e-2
 
 TAGS = np.array(

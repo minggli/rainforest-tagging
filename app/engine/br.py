@@ -2,7 +2,7 @@
 """
 br
 
-binary relevance approach for multi-label classification, treating each label
+binary relevance approach for multi-label classification, predicting each label
 independently using tf.sigmoid_cross_entropy_with_logits after CNN (VGG-16)
 
 VERY DEEP CONVOLUTIONAL NETWORKS FOR LARGE-SCALE IMAGE RECOGNITION
@@ -27,26 +27,26 @@ lstm = LSTM(state_size=512, num_classes=17)
 x, y_ = cnn.x, cnn.y_
 keep_prob = tf.placeholder(tf.float32)
 
-conv_layer_1 = cnn.add_conv_layer(x, [[3, 3, 3, 6], [6]])
-conv_layer_2 = cnn.add_conv_layer(conv_layer_1, [[3, 3, 6, 6], [6]])
+conv_layer_1 = cnn.add_conv_layer(x, [[3, 3, 3, 24], [24]])
+conv_layer_2 = cnn.add_conv_layer(conv_layer_1, [[3, 3, 24, 24], [24]])
 max_pool_1 = cnn.add_pooling_layer(conv_layer_2)
-conv_layer_3 = cnn.add_conv_layer(max_pool_1, [[3, 3, 6, 12], [12]])
-conv_layer_4 = cnn.add_conv_layer(conv_layer_3, [[3, 3, 12, 12], [12]])
+conv_layer_3 = cnn.add_conv_layer(max_pool_1, [[3, 3, 24, 48], [48]])
+conv_layer_4 = cnn.add_conv_layer(conv_layer_3, [[3, 3, 48, 48], [48]])
 max_pool_2 = cnn.add_pooling_layer(conv_layer_4)
-conv_layer_5 = cnn.add_conv_layer(max_pool_2, [[3, 3, 12, 24], [24]])
-conv_layer_6 = cnn.add_conv_layer(conv_layer_5, [[3, 3, 24, 24], [24]])
-conv_layer_7 = cnn.add_conv_layer(conv_layer_6, [[3, 3, 24, 24], [24]])
+conv_layer_5 = cnn.add_conv_layer(max_pool_2, [[3, 3, 48, 96], [96]])
+conv_layer_6 = cnn.add_conv_layer(conv_layer_5, [[3, 3, 96, 96], [96]])
+conv_layer_7 = cnn.add_conv_layer(conv_layer_6, [[3, 3, 96, 96], [96]])
 max_pool_3 = cnn.add_pooling_layer(conv_layer_7)
-conv_layer_8 = cnn.add_conv_layer(max_pool_3, [[3, 3, 24, 48], [48]])
-conv_layer_9 = cnn.add_conv_layer(conv_layer_8, [[3, 3, 48, 48], [48]])
-conv_layer_10 = cnn.add_conv_layer(conv_layer_9, [[3, 3, 48, 48], [48]])
+conv_layer_8 = cnn.add_conv_layer(max_pool_3, [[3, 3, 96, 192], [192]])
+conv_layer_9 = cnn.add_conv_layer(conv_layer_8, [[3, 3, 192, 192], [192]])
+conv_layer_10 = cnn.add_conv_layer(conv_layer_9, [[3, 3, 192, 192], [192]])
 max_pool_4 = cnn.add_pooling_layer(conv_layer_10)
-conv_layer_11 = cnn.add_conv_layer(max_pool_4, [[3, 3, 48, 48], [48]])
-conv_layer_12 = cnn.add_conv_layer(conv_layer_11, [[3, 3, 48, 48], [48]])
-conv_layer_13 = cnn.add_conv_layer(conv_layer_12, [[3, 3, 48, 48], [48]])
+conv_layer_11 = cnn.add_conv_layer(max_pool_4, [[3, 3, 192, 192], [192]])
+conv_layer_12 = cnn.add_conv_layer(conv_layer_11, [[3, 3, 192, 192], [192]])
+conv_layer_13 = cnn.add_conv_layer(conv_layer_12, [[3, 3, 192, 192], [192]])
 max_pool_5 = cnn.add_pooling_layer(conv_layer_13)
-fc1 = cnn.add_dense_layer(max_pool_5, [[4 * 4 * 48, 1024], [1024],
-                                       [-1, 4 * 4 * 48]])
+fc1 = cnn.add_dense_layer(max_pool_5, [[4 * 4 * 192, 1024], [1024],
+                                       [-1, 4 * 4 * 192]])
 # drop_out_layer_1 = cnn.add_drop_out_layer(fc1, keep_prob)
 fc2 = cnn.add_dense_layer(fc1, [[1024, 512], [512], [-1, 1024]])
 # drop_out_layer_2 = cnn.add_drop_out_layer(fc2, keep_prob)
@@ -59,7 +59,7 @@ cross_entropy = \
 loss = tf.reduce_mean(cross_entropy)
 
 # applying label weights to loss function
-if True:
+if False:
     class_weight = tf.constant([TAGS_WEIGHTINGS])
     # weight_per_label = tf.transpose(tf.multiply(y_, class_weight))
     loss = tf.reduce_mean(class_weight * cross_entropy)

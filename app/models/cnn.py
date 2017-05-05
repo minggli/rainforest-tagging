@@ -106,7 +106,8 @@ class ConvolutionalNeuralNetwork:
         return hypothesis_drop
 
     def add_read_out_layer(self, input_layer):
-        """read out layer"""
+        """read out layer with output shape of [batch_size, num_classes]
+        to feed into softmax"""
         input_layer_m = int(input_layer.get_shape()[1])
         W = self.weight_variable(shape=[input_layer_m, self._n_class])
         b = self.bias_variable(shape=[self._n_class])

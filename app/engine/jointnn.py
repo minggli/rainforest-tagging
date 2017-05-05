@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-cnnlstm
+jointnn
 
 joint embedding with Convolutional Neural Network and LSTM as inspired from:
 
@@ -23,10 +23,11 @@ from ..controllers import (train, save_session, predict, submit,
                            restore_session)
 
 cnn = ConvolutionalNeuralNetwork(shape=IMAGE_SHAPE, num_classes=None)
-lstm = LSTM(state_size=512, num_classes=17)
 
 x, y_ = cnn.x, cnn.y_
 keep_prob = tf.placeholder(tf.float32)
+
+# VGG-16 block
 
 conv_layer_1 = cnn.add_conv_layer(x, [[3, 3, 3, 6], [6]])
 conv_layer_2 = cnn.add_conv_layer(conv_layer_1, [[3, 3, 6, 6], [6]])
@@ -48,10 +49,14 @@ conv_layer_13 = cnn.add_conv_layer(conv_layer_12, [[3, 3, 48, 48], [48]])
 max_pool_5 = cnn.add_pooling_layer(conv_layer_13)
 fc1 = cnn.add_dense_layer(max_pool_5, [[4 * 4 * 48, 1024], [1024],
                                        [-1, 4 * 4 * 48]])
-fc2 = cnn.add_dense_layer(fc1, [[1024, 512], [512], [-1, 1024]])
-# [batch_size, 512]
+img_vector = cnn.add_dense_layer(fc1, [[1024, 512], [512], [-1, 1024]])
+# [batch_size, 512] so each image has vector representation of 512 dimensions.
 
-print(fc2)
+
+
+lstm = LSTM(state_size=512, num_classes=17)
+x_rnn, y_rnn = lstm.x, lstm.y_
+
 
 
 # # default loss function
