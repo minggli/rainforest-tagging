@@ -2,8 +2,9 @@
 """
 rnn
 
-model built atop tensorflow for constructing Recurrent Neural Network (RNN) and
-Long Short-Term Memory (LSTM)
+model built atop tensorflow for constructing standardRecurrent Neural Network
+(RNN) and Long Short-Term Memory (LSTM)
+
 """
 
 import tensorflow as tf
