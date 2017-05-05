@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 """
-ovr
+br
 
-OvR (One vs Rest) module for multi-label classification using VGG-16
-Convolutional Neural Network
+binary relevance approach for multi-label classification, treating each label
+independently using tf.sigmoid_cross_entropy_with_logits after CNN (VGG-16)
 
 VERY DEEP CONVOLUTIONAL NETWORKS FOR LARGE-SCALE IMAGE RECOGNITION
 Simonyan K. & Zisserman A. (2015)
