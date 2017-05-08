@@ -6,9 +6,10 @@ handle tensorflow session relating to ConvNet
 """
 import os
 import time
-import tensorflow as tf
 import pandas as pd
+import tensorflow as tf
 
+from sklearn import metrics
 from datetime import datetime
 
 from .pipeline import multithreading
@@ -29,8 +30,9 @@ def timeit(func):
 
 @timeit
 @multithreading
-def train(n, sess, x, y_, keep_prob, train_image_batch, train_label_batch,
-          valid_image_batch, valid_label_batch, optimiser, metric, loss):
+def train(n, sess, x, y_, keep_prob, logits, train_image_batch,
+          train_label_batch, valid_image_batch, valid_label_batch, optimiser,
+          metric, loss):
     """train neural network and produce accuracies with validation set."""
 
     for global_step in range(n):
@@ -42,15 +44,18 @@ def train(n, sess, x, y_, keep_prob, train_image_batch, train_label_batch,
 
         if global_step % 10 == 0:
             valid_image, valid_label = \
-                sess.run([valid_image_batch, valid_label_batch])
-            training_accuracy, loss_score = \
-                sess.run([metric, loss], feed_dict={x: valid_image,
-                         y_: valid_label, keep_prob: 1.0})
-            print("step {0} of {3}, valid accuracy: {1:.4f}, "
-                  "log loss: {2:.4f}".format(global_step,
-                                             training_accuracy,
-                                             loss_score,
-                                             n))
+                sess.run(fetches=[valid_image_batch, valid_label_batch])
+            valid_accuracy, loss_score, y_pred = sess.run(
+                fetches=[metric, loss, tf.round(tf.nn.sigmoid(logits))],
+                feed_dict={x: valid_image, y_: valid_label, keep_prob: 1.0})
+            # beta score as specified in competition with beta = 2
+            f2_score = metrics.fbeta_score(y_true=valid_label,
+                                           y_pred=y_pred,
+                                           beta=2,
+                                           average='samples')
+            print("step {0} of {3}, valid accuracy: {1:.4f}, F2 score: {4:.4f}"
+                  " log loss: {2:.4f}".format(global_step, valid_accuracy,
+                                              loss_score, n, f2_score))
 
 
 @timeit
