@@ -3,7 +3,7 @@
 br
 
 binary relevance approach for multi-label classification, predicting each label
-independently using tf.sigmoid_cross_entropy_with_logits after CNN (VGG-16)
+independently after CNN (VGG-16)
 
 VERY DEEP CONVOLUTIONAL NETWORKS FOR LARGE-SCALE IMAGE RECOGNITION
 Simonyan K. & Zisserman A. (2015)
@@ -42,23 +42,27 @@ conv_layer_11 = cnn.add_conv_layer(max_pool_4, [[3, 3, 48, 48], [48]])
 conv_layer_12 = cnn.add_conv_layer(conv_layer_11, [[3, 3, 48, 48], [48]])
 conv_layer_13 = cnn.add_conv_layer(conv_layer_12, [[3, 3, 48, 48], [48]])
 max_pool_5 = cnn.add_pooling_layer(conv_layer_13)
-fc1 = cnn.add_dense_layer(max_pool_5, [[8 * 8 * 48, 256], [256],
-                                       [-1, 8 * 8 * 48]])
+fc1 = cnn.add_dense_layer(max_pool_5, [[2 * 2 * 48, 2048], [2048],
+                                       [-1, 2 * 2 * 48]])
 # drop_out_layer_1 = cnn.add_drop_out_layer(fc1, keep_prob)
-fc2 = cnn.add_dense_layer(fc1, [[256, 128], [128], [-1, 256]])
+fc2 = cnn.add_dense_layer(fc1, [[2048, 1024], [1024], [-1, 2048]])
 # drop_out_layer_2 = cnn.add_drop_out_layer(fc2, keep_prob)
 logits = cnn.add_read_out_layer(fc2)
 # [batch_size, 17]
 
 # default loss function
-cross_entropy = tf.nn.sigmoid_cross_entropy_with_logits(logits=logits,
-                                                        labels=y_)
+# cross_entropy = tf.nn.sigmoid_cross_entropy_with_logits(logits=logits,
+#                                                         labels=y_)
+# !!! tf.nn.sigmoid_cross_entropy_with_logits doesn't seem to converge.
+# implement original logistic loss function
+cross_entropy = - (y_ * tf.log(1 / (1 + tf.exp(-logits)) + 1e-9) * .8 +
+                   (1 - y_) * tf.log(1 - 1 / (1 + tf.exp(-logits)) + 1e-9))
 loss = tf.reduce_mean(cross_entropy)
 
 # applying label weights to loss function
 if False:
-    class_weight = tf.constant([TAGS_WEIGHTINGS])
-    loss = tf.reduce_mean(class_weight * cross_entropy)
+    weightings = tf.constant([[TAGS_WEIGHTINGS]], shape=[1, 17])
+    loss = tf.reduce_mean(weightings * cross_entropy)
 
 # add L2 regularization on weights from readout layer
 if False:
@@ -84,7 +88,7 @@ sess = tf.Session()
 if TRAIN:
     # prepare data feed
     train_file_array, train_label_array, valid_file_array, valid_label_array =\
-        generate_data_skeleton(root_dir=IMAGE_PATH + 'train', valid_size=.15)
+        generate_data_skeleton(root_dir=IMAGE_PATH + 'train', valid_size=.20)
     train_image_batch, train_label_batch = data_pipe(
                                             train_file_array,
                                             train_label_array,
