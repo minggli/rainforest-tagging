@@ -105,7 +105,7 @@ def decode_transform(input_queue, shape=None, standardize=True, distort=True):
     if distort:
         img = tf.image.random_flip_up_down(img)
         img = tf.image.random_flip_left_right(img)
-        img = tf.image.random_contrast(img, lower=.2)
+        img = tf.image.random_contrast(img, lower=.2, upper=2)
     # apply standardization
     if standardize:
         img = tf.image.per_image_standardization(img)
