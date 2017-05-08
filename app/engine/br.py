@@ -42,8 +42,8 @@ conv_layer_11 = cnn.add_conv_layer(max_pool_4, [[3, 3, 48, 48], [48]])
 conv_layer_12 = cnn.add_conv_layer(conv_layer_11, [[3, 3, 48, 48], [48]])
 conv_layer_13 = cnn.add_conv_layer(conv_layer_12, [[3, 3, 48, 48], [48]])
 max_pool_5 = cnn.add_pooling_layer(conv_layer_13)
-fc1 = cnn.add_dense_layer(max_pool_5, [[4 * 4 * 48, 256], [256],
-                                       [-1, 4 * 4 * 48]])
+fc1 = cnn.add_dense_layer(max_pool_5, [[8 * 8 * 48, 256], [256],
+                                       [-1, 8 * 8 * 48]])
 # drop_out_layer_1 = cnn.add_drop_out_layer(fc1, keep_prob)
 fc2 = cnn.add_dense_layer(fc1, [[256, 128], [128], [-1, 256]])
 # drop_out_layer_2 = cnn.add_drop_out_layer(fc2, keep_prob)
