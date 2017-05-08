@@ -61,7 +61,7 @@ def generate_data_skeleton(root_dir, ext=('.jpg', '.csv'), valid_size=None):
     if valid_size:
         print('tags one-hot encoded: \n{0}'.format(mlb.classes_))
         X_train, X_valid, y_train, y_valid = model_selection.train_test_split(
-            X, y, test_size=valid_size)
+            X, y, test_size=valid_size, stratify=y)
         print('training: {0} samples; validation: {1} samples.'.format(
             X_train.shape[0], X_valid.shape[0]))
         return X_train, y_train, X_valid, y_valid
