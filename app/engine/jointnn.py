@@ -24,10 +24,10 @@ from ..controllers import (train, save_session, predict, submit,
                            restore_session)
 
 # Convolutional Neural Network as VGG-16
-cnn = ConvolutionalNeuralNetwork(shape=IMAGE_SHAPE, num_classes=1)
-
 with tf.variable_scope('VGG-16'):
-    x, y_ = cnn.x, cnn.y_
+    cnn = ConvolutionalNeuralNetwork(shape=IMAGE_SHAPE, num_classes=None)
+
+    x = cnn.x
     keep_prob = tf.placeholder(tf.float32)
 
     conv_layer_1 = cnn.add_conv_layer(x, [[3, 3, 3, 6], [6]])
@@ -48,10 +48,10 @@ with tf.variable_scope('VGG-16'):
     conv_layer_12 = cnn.add_conv_layer(conv_layer_11, [[3, 3, 48, 48], [48]])
     conv_layer_13 = cnn.add_conv_layer(conv_layer_12, [[3, 3, 48, 48], [48]])
     max_pool_5 = cnn.add_pooling_layer(conv_layer_13)
-    fc1 = cnn.add_dense_layer(max_pool_5, [[4 * 4 * 48, 256], [256],
+    fc1 = cnn.add_dense_layer(max_pool_5, [[4 * 4 * 48, 600], [600],
                                            [-1, 4 * 4 * 48]])
-    img_vector = cnn.add_dense_layer(fc1, [[256, 128], [128], [-1, 256]])
-    # [batch_size, 128] so image has vector representation of 128 dimensions.
+    img_vector = cnn.add_dense_layer(fc1, [[600, 300], [300], [-1, 600]])
+    # [batch_size, 300] so image has vector representation of 128 dimensions.
     print(img_vector)
 
 with tf.variable_scope('LSTM'):
@@ -59,7 +59,7 @@ with tf.variable_scope('LSTM'):
     label_embedding = LabelVectorizer().fit(TAGS).transform()
     Ul = tf.constant(label_embedding, name='label_embedding')
     word_vector = tf.nn.embedding_lookup(Ul, tf.where(tf.equal(y_, 1)))
-    # [batch_size, num_labels, 300]
+    # [batch_size, num_labels from 1 to 17, 300]
 
     # using Tensorflow API first before using implemented rnn module
     weight_initializer = tf.truncated_normal_initializer(stddev=0.1)
@@ -69,13 +69,9 @@ with tf.variable_scope('LSTM'):
                                         forget_bias=1.0,
                                         activation=tf.tanh)
     output, final_state = tf.nn.dynamic_rnn(cell=lstm_cell,
-                                            inputs=img_vector,
+                                            inputs=,
                                             sequence_length=None,
                                             initial_state=lstm_cell.zero_state)
-    # [batch_size, 128] so each image has its label(s) represented as 128-d vector.
-    #
-    # w = U_label[y_.nonzero()]
-
 
 
 # # default loss function
