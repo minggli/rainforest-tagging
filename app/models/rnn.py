@@ -2,7 +2,7 @@
 """
 rnn
 
-model built atop tensorflow for constructing standardRecurrent Neural Network
+model built with tensorflow for constructing standard Recurrent Neural Network
 (RNN) and Long Short-Term Memory (LSTM)
 
 """
@@ -21,7 +21,6 @@ class _BaseRNN(object):
     @property
     def x(self):
         """feature vector"""
-        # TODO !!! Needs Fix
         return tf.placeholder(dtype=tf.float32,
                               shape=(None, self._step_size),
                               name='feature')
