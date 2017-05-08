@@ -81,7 +81,7 @@ def make_queue(paths_to_image, labels, num_epochs=None, shuffle=True):
     return input_queue
 
 
-def decode_transform(input_queue, shape=None, standardize=True):
+def decode_transform(input_queue, shape=None, standardize=True, distort=True):
     """a single decode and transform function that applies standardization with
     mean centralisation."""
     # input_queue allows slicing with 0: path_to_image, 1: encoded label
@@ -99,16 +99,18 @@ def decode_transform(input_queue, shape=None, standardize=True):
     resized_img = tf.image.resize_images(
                                 images=cropped_img,
                                 size=[shape[0], shape[1]])
-
     resized_img.set_shape(shape)
+    img = resized_img
 
+    if distort:
+        img = tf.image.random_flip_up_down(img)
+        img = tf.image.random_flip_left_right(img)
+        img = tf.image.random_contrast(img, lower=.2)
     # apply standardization
     if standardize:
-        processed_image = tf.image.per_image_standardization(resized_img)
-    elif not standardize:
-        processed_image = resized_img
+        img = tf.image.per_image_standardization(img)
 
-    return processed_image, label_queue
+    return img, label_queue
 
 
 def batch_generator(image, label, batch_size=None, shuffle=True):
