@@ -12,8 +12,9 @@ import tensorflow as tf
 
 class _BaseRNN(object):
     """base class recurrent neural network"""
-    def __init__(self, state_size, num_classes):
+    def __init__(self, step_size, state_size, num_classes):
 
+        self._step_size = step_size
         self._state_size = state_size
         self._n_class = num_classes
 
@@ -22,7 +23,7 @@ class _BaseRNN(object):
         """feature vector"""
         # TODO !!! Needs Fix
         return tf.placeholder(dtype=tf.float32,
-                              shape=(None, self._n_class),
+                              shape=(None, self._step_size),
                               name='feature')
 
     @property
@@ -43,11 +44,11 @@ class _BaseRNN(object):
         init = tf.truncated_normal_initializer(stddev=.1)
         if 'W_hx' in name:
             return tf.get_variable(name=name,
-                                   shape=[self._n_class, self._state_size],
+                                   shape=[self._step_size, self._state_size],
                                    initializer=init)
         elif 'W_hh' in name:
             return tf.get_variable(name=name,
-                                   shape=[self._n_class, self._state_size],
+                                   shape=[self._step_size, self._state_size],
                                    initializer=init)
         else:
             raise RuntimeError('must specify hx or hh for rnn cell weights.'
@@ -85,8 +86,8 @@ class _BaseRNN(object):
 
 class RNN(_BaseRNN):
 
-    def __init__(self, state_size, num_classes):
-        super(RNN, self).__init__(state_size, num_classes)
+    def __init__(self, step_size, state_size, num_classes):
+        super(RNN, self).__init__(step_size, state_size, num_classes)
 
     def __call__(self, rnn_input, state):
         """RNN cell implementation to Colah's blog (2015)."""
@@ -104,8 +105,8 @@ class RNN(_BaseRNN):
 
 class LSTM(_BaseRNN):
 
-    def __init__(self, state_size, num_classes):
-        super(LSTM, self).__init__(state_size, num_classes)
+    def __init__(self, step_size, state_size, num_classes):
+        super(LSTM, self).__init__(step_size, state_size, num_classes)
 
     def __call__(self, cell_input, cell_output, cell_state):
         """LSTM cell implemented to Hochreiter & Schmidhuber (1997)"""
