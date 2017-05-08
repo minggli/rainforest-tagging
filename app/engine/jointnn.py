@@ -15,47 +15,66 @@ import tensorflow as tf
 
 from ..main import EVAL, TRAIN
 from ..models.cnn import ConvolutionalNeuralNetwork
-from ..models.rnn import LSTM
+# from ..models.rnn import LSTM
+from ..label2vec import LabelVectorizer
 from ..settings import (IMAGE_PATH, IMAGE_SHAPE, BATCH_SIZE, MODEL_PATH,
                         MAX_STEPS, ALPHA, BETA, TAGS, TAGS_WEIGHTINGS)
 from ..pipeline import data_pipe, generate_data_skeleton
 from ..controllers import (train, save_session, predict, submit,
                            restore_session)
 
-cnn = ConvolutionalNeuralNetwork(shape=IMAGE_SHAPE, num_classes=None)
+# Convolutional Neural Network as VGG-16
+cnn = ConvolutionalNeuralNetwork(shape=IMAGE_SHAPE, num_classes=1)
 
-x, y_ = cnn.x, cnn.y_
-keep_prob = tf.placeholder(tf.float32)
+with tf.variable_scope('VGG-16'):
+    x, y_ = cnn.x, cnn.y_
+    keep_prob = tf.placeholder(tf.float32)
 
-# VGG-16 block
+    conv_layer_1 = cnn.add_conv_layer(x, [[3, 3, 3, 6], [6]])
+    conv_layer_2 = cnn.add_conv_layer(conv_layer_1, [[3, 3, 6, 6], [6]])
+    max_pool_1 = cnn.add_pooling_layer(conv_layer_2)
+    conv_layer_3 = cnn.add_conv_layer(max_pool_1, [[3, 3, 6, 12], [12]])
+    conv_layer_4 = cnn.add_conv_layer(conv_layer_3, [[3, 3, 12, 12], [12]])
+    max_pool_2 = cnn.add_pooling_layer(conv_layer_4)
+    conv_layer_5 = cnn.add_conv_layer(max_pool_2, [[3, 3, 12, 24], [24]])
+    conv_layer_6 = cnn.add_conv_layer(conv_layer_5, [[3, 3, 24, 24], [24]])
+    conv_layer_7 = cnn.add_conv_layer(conv_layer_6, [[3, 3, 24, 24], [24]])
+    max_pool_3 = cnn.add_pooling_layer(conv_layer_7)
+    conv_layer_8 = cnn.add_conv_layer(max_pool_3, [[3, 3, 24, 48], [48]])
+    conv_layer_9 = cnn.add_conv_layer(conv_layer_8, [[3, 3, 48, 48], [48]])
+    conv_layer_10 = cnn.add_conv_layer(conv_layer_9, [[3, 3, 48, 48], [48]])
+    max_pool_4 = cnn.add_pooling_layer(conv_layer_10)
+    conv_layer_11 = cnn.add_conv_layer(max_pool_4, [[3, 3, 48, 48], [48]])
+    conv_layer_12 = cnn.add_conv_layer(conv_layer_11, [[3, 3, 48, 48], [48]])
+    conv_layer_13 = cnn.add_conv_layer(conv_layer_12, [[3, 3, 48, 48], [48]])
+    max_pool_5 = cnn.add_pooling_layer(conv_layer_13)
+    fc1 = cnn.add_dense_layer(max_pool_5, [[4 * 4 * 48, 256], [256],
+                                           [-1, 4 * 4 * 48]])
+    img_vector = cnn.add_dense_layer(fc1, [[256, 128], [128], [-1, 256]])
+    # [batch_size, 128] so image has vector representation of 128 dimensions.
+    print(img_vector)
 
-conv_layer_1 = cnn.add_conv_layer(x, [[3, 3, 3, 6], [6]])
-conv_layer_2 = cnn.add_conv_layer(conv_layer_1, [[3, 3, 6, 6], [6]])
-max_pool_1 = cnn.add_pooling_layer(conv_layer_2)
-conv_layer_3 = cnn.add_conv_layer(max_pool_1, [[3, 3, 6, 12], [12]])
-conv_layer_4 = cnn.add_conv_layer(conv_layer_3, [[3, 3, 12, 12], [12]])
-max_pool_2 = cnn.add_pooling_layer(conv_layer_4)
-conv_layer_5 = cnn.add_conv_layer(max_pool_2, [[3, 3, 12, 24], [24]])
-conv_layer_6 = cnn.add_conv_layer(conv_layer_5, [[3, 3, 24, 24], [24]])
-conv_layer_7 = cnn.add_conv_layer(conv_layer_6, [[3, 3, 24, 24], [24]])
-max_pool_3 = cnn.add_pooling_layer(conv_layer_7)
-conv_layer_8 = cnn.add_conv_layer(max_pool_3, [[3, 3, 24, 48], [48]])
-conv_layer_9 = cnn.add_conv_layer(conv_layer_8, [[3, 3, 48, 48], [48]])
-conv_layer_10 = cnn.add_conv_layer(conv_layer_9, [[3, 3, 48, 48], [48]])
-max_pool_4 = cnn.add_pooling_layer(conv_layer_10)
-conv_layer_11 = cnn.add_conv_layer(max_pool_4, [[3, 3, 48, 48], [48]])
-conv_layer_12 = cnn.add_conv_layer(conv_layer_11, [[3, 3, 48, 48], [48]])
-conv_layer_13 = cnn.add_conv_layer(conv_layer_12, [[3, 3, 48, 48], [48]])
-max_pool_5 = cnn.add_pooling_layer(conv_layer_13)
-fc1 = cnn.add_dense_layer(max_pool_5, [[4 * 4 * 48, 1024], [1024],
-                                       [-1, 4 * 4 * 48]])
-img_vector = cnn.add_dense_layer(fc1, [[1024, 512], [512], [-1, 1024]])
-# [batch_size, 512] so each image has vector representation of 512 dimensions.
+with tf.variable_scope('LSTM'):
+    # label embedding in (17, 300)
+    label_embedding = LabelVectorizer().fit(TAGS).transform()
+    Ul = tf.constant(label_embedding, name='label_embedding')
+    word_vector = tf.nn.embedding_lookup(Ul, tf.where(tf.equal(y_, 1)))
+    # [batch_size, num_labels, 300]
 
-
-
-lstm = LSTM(state_size=512, num_classes=17)
-x_rnn, y_rnn = lstm.x, lstm.y_
+    # using Tensorflow API first before using implemented rnn module
+    weight_initializer = tf.truncated_normal_initializer(stddev=0.1)
+    lstm_cell = tf.contrib.rnn.LSTMCell(num_units=128,
+                                        use_peepholes=False,
+                                        initializer=weight_initializer,
+                                        forget_bias=1.0,
+                                        activation=tf.tanh)
+    output, final_state = tf.nn.dynamic_rnn(cell=lstm_cell,
+                                            inputs=img_vector,
+                                            sequence_length=None,
+                                            initial_state=lstm_cell.zero_state)
+    # [batch_size, 128] so each image has its label(s) represented as 128-d vector.
+    #
+    # w = U_label[y_.nonzero()]
 
 
 

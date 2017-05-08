@@ -12,6 +12,7 @@ GloVe: Global Vectors for Word Representation
 Pennington et al (2014)
 """
 
+import numpy as np
 import spacy
 import collections
 
@@ -44,4 +45,6 @@ class LabelVectorizer:
         return self
 
     def transform(self):
-        return [self._nlp(l).vector for l in self._corpus]
+        """output embedding of shape [vocal_size, n_dimensions]"""
+        return np.array(
+                [self._nlp(l).vector for l in self._corpus]).reshape(-1, 300)
