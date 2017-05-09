@@ -65,7 +65,7 @@ def generate_data_skeleton(root_dir,
     if valid_size:
         print('tags one-hot encoded: \n{0}'.format(mlb.classes_))
         if resample:
-            ros = RandomOverSampler()
+            ros = RandomOverSampler(ratio=.33)
             original_index = np.array(df.index).reshape(-1, 1)
             codified_label = np.array(pd.Categorical(df['tags']).codes)
             resampled_index, _ = ros.fit_sample(original_index, codified_label)
@@ -114,11 +114,10 @@ def decode_transform(input_queue,
                                 target_width=256)
 
     # resize cropped images to desired shape
-    resized_img = tf.image.resize_images(
+    img = tf.image.resize_images(
                                 images=cropped_img,
                                 size=[shape[0], shape[1]])
-    resized_img.set_shape(shape)
-    img = resized_img
+    img.set_shape(shape)
 
     if distortion:
         img = tf.image.random_flip_up_down(img)
