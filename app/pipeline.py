@@ -14,6 +14,7 @@ import pandas as pd
 import tensorflow as tf
 
 from sklearn import model_selection, preprocessing
+from imblearn.over_sampling import RandomOverSampler
 
 
 def folder_traverse(root_dir, ext=('.jpg')):
@@ -31,7 +32,10 @@ def folder_traverse(root_dir, ext=('.jpg')):
     return file_structure
 
 
-def generate_data_skeleton(root_dir, ext=('.jpg', '.csv'), valid_size=None):
+def generate_data_skeleton(root_dir,
+                           ext=('.jpg', '.csv'),
+                           valid_size=None,
+                           resample=True):
     """turn file structure into human-readable pandas dataframe"""
     file_structure = folder_traverse(root_dir, ext=ext)
     reversed_fs = {k + '/' + f: os.path.splitext(f)[0]
@@ -57,8 +61,20 @@ def generate_data_skeleton(root_dir, ext=('.jpg', '.csv'), valid_size=None):
     mlb.fit(train_labels)
     X = np.array(df['path_to_file'])
     y = mlb.transform(train_labels)
+
     if valid_size:
         print('tags one-hot encoded: \n{0}'.format(mlb.classes_))
+        if resample:
+            ros = RandomOverSampler()
+            original_index = np.array(df.index).reshape(-1, 1)
+            codified_label = np.array(pd.Categorical(df['tags']).codes)
+            resampled_index, _ = ros.fit_sample(original_index, codified_label)
+            resampled_index = [i for nested in resampled_index for i in nested]
+            X = X[resampled_index]
+            y = y[resampled_index]
+            print('To balance classes, training data has been oversampled'
+                  ' to: {0}'.format(X.shape[0]))
+
         X_train, X_valid, y_train, y_valid = model_selection.train_test_split(
             X, y, test_size=valid_size, stratify=y)
         print('training: {0} samples; validation: {1} samples.'.format(
@@ -80,7 +96,10 @@ def make_queue(paths_to_image, labels, num_epochs=None, shuffle=True):
     return input_queue
 
 
-def decode_transform(input_queue, shape=None, standardize=True, distort=True):
+def decode_transform(input_queue,
+                     shape=None,
+                     standardize=True,
+                     distortion=True):
     """a single decode and transform function that applies standardization with
     mean centralisation."""
     # input_queue allows slicing with 0: path_to_image, 1: encoded label
@@ -101,7 +120,7 @@ def decode_transform(input_queue, shape=None, standardize=True, distort=True):
     resized_img.set_shape(shape)
     img = resized_img
 
-    if distort:
+    if distortion:
         img = tf.image.random_flip_up_down(img)
         img = tf.image.random_flip_left_right(img)
         img = tf.image.random_contrast(img, lower=.2, upper=2)
