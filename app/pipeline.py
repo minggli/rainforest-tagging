@@ -39,25 +39,24 @@ def generate_data_skeleton(root_dir, ext=('.jpg', '.csv'), valid_size=None):
 
     for key in reversed_fs:
         if key.endswith('.csv'):
-            df_train_labels = pd.read_csv(key)
+            df_csv = pd.read_csv(key)
             reversed_fs.pop(key)
             break
 
     df = pd.DataFrame.from_dict(data=reversed_fs, orient='index').reset_index()
     df.rename(columns={'index': 'path_to_file', 0: 'filename'}, inplace=True)
-    df.sort_values(by=['path_to_file', 'filename'], inplace=True)
     df.reset_index(inplace=True, drop=True)
 
-    df = df.merge(right=df_train_labels,
-                  how='left',
-                  left_on='filename',
-                  right_on='image_name')
+    df = df_csv.merge(right=df,
+                      how='left',
+                      left_on='image_name',
+                      right_on='filename')
+
     train_labels = [string.split(' ') for string in df['tags'].tolist()]
     mlb = preprocessing.MultiLabelBinarizer()
     mlb.fit(train_labels)
     X = np.array(df['path_to_file'])
     y = mlb.transform(train_labels)
-
     if valid_size:
         print('tags one-hot encoded: \n{0}'.format(mlb.classes_))
         X_train, X_valid, y_train, y_valid = model_selection.train_test_split(
