@@ -16,7 +16,7 @@ import tensorflow as tf
 from ..main import EVAL, TRAIN
 from ..models.cnn import ConvolutionalNeuralNetwork
 # from ..models.rnn import LSTM
-from ..label2vec import LabelVectorizer
+# from ..label2vec import LabelVectorizer
 from ..settings import (IMAGE_PATH, IMAGE_SHAPE, BATCH_SIZE, MODEL_PATH,
                         MAX_STEPS, ALPHA, BETA, TAGS, TAGS_WEIGHTINGS)
 from ..pipeline import data_pipe, generate_data_skeleton
@@ -52,24 +52,24 @@ with tf.variable_scope('VGG-16'):
                                            [-1, 4 * 4 * 48]])
     img_vector = cnn.add_dense_layer(fc1, [[600, 300], [300], [-1, 600]])
     # [batch_size, 300] so image has vector representation of 128 dimensions.
-    print(img_vector)
 
 with tf.variable_scope('LSTM'):
+    # using Tensorflow API first before using self-implemented lstm module
+
     # label embedding in (17, 300)
-    label_embedding = LabelVectorizer().fit(TAGS).transform()
-    Ul = tf.constant(label_embedding, name='label_embedding')
-    word_vector = tf.nn.embedding_lookup(Ul, tf.where(tf.equal(y_, 1)))
+    # label_embedding = LabelVectorizer().fit(TAGS).transform()
+    # Ul = tf.constant(label_embedding, name='label_embedding')
+    # word_vector = tf.nn.embedding_lookup(Ul, tf.where(tf.equal(y_, 1)))
     # [batch_size, num_labels from 1 to 17, 300]
 
-    # using Tensorflow API first before using implemented rnn module
     weight_initializer = tf.truncated_normal_initializer(stddev=0.1)
-    lstm_cell = tf.contrib.rnn.LSTMCell(num_units=128,
+    lstm_cell = tf.contrib.rnn.LSTMCell(num_units=300,
                                         use_peepholes=False,
                                         initializer=weight_initializer,
                                         forget_bias=1.0,
                                         activation=tf.tanh)
     output, final_state = tf.nn.dynamic_rnn(cell=lstm_cell,
-                                            inputs=,
+                                            inputs=img_vector,
                                             sequence_length=None,
                                             initial_state=lstm_cell.zero_state)
 
