@@ -42,10 +42,10 @@ conv_layer_11 = cnn.add_conv_layer(max_pool_4, [[3, 3, 48, 48], [48]])
 conv_layer_12 = cnn.add_conv_layer(conv_layer_11, [[3, 3, 48, 48], [48]])
 conv_layer_13 = cnn.add_conv_layer(conv_layer_12, [[3, 3, 48, 48], [48]])
 max_pool_5 = cnn.add_pooling_layer(conv_layer_13)
-fc1 = cnn.add_dense_layer(max_pool_5, [[1 * 1 * 48, 4096], [4096],
+fc1 = cnn.add_dense_layer(max_pool_5, [[1 * 1 * 48, 256], [256],
                                        [-1, 1 * 1 * 48]])
 drop_out_layer_1 = cnn.add_drop_out_layer(fc1, keep_prob)
-fc2 = cnn.add_dense_layer(fc1, [[4096, 2048], [2048], [-1, 4096]])
+fc2 = cnn.add_dense_layer(fc1, [[256, 128], [128], [-1, 256]])
 drop_out_layer_2 = cnn.add_drop_out_layer(fc2, keep_prob)
 logits = cnn.add_read_out_layer(drop_out_layer_2)
 # [batch_size, 17]
@@ -59,7 +59,7 @@ cross_entropy = - (y_ * tf.log(1 / (1 + tf.exp(-logits)) + 1e-9) +
 loss = tf.reduce_mean(cross_entropy)
 
 # applying label weights to loss function
-if True:
+if False:
     class_weight = tf.constant([[TAGS_WEIGHTINGS]], shape=[1, 17])
     loss = tf.reduce_mean(class_weight * cross_entropy)
 
@@ -87,7 +87,7 @@ sess = tf.Session()
 if TRAIN:
     # prepare data feed
     train_file_array, train_label_array, valid_file_array, valid_label_array =\
-        generate_data_skeleton(root_dir=IMAGE_PATH + 'train', valid_size=.20)
+        generate_data_skeleton(root_dir=IMAGE_PATH + 'train', valid_size=.10)
     train_image_batch, train_label_batch = data_pipe(
                                             train_file_array,
                                             train_label_array,
