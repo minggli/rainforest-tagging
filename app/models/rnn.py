@@ -47,7 +47,7 @@ class _BaseRNN(object):
                                    initializer=init)
         elif 'W_hh' in name:
             return tf.get_variable(name=name,
-                                   shape=[self._step_size, self._state_size],
+                                   shape=[self._state_size, self._state_size],
                                    initializer=init)
         else:
             raise RuntimeError('must specify hx or hh for rnn cell weights.'
