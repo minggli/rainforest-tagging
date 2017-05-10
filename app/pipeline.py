@@ -35,7 +35,7 @@ def folder_traverse(root_dir, ext=('.jpg')):
 def generate_data_skeleton(root_dir,
                            ext=('.jpg', '.csv'),
                            valid_size=None,
-                           resample=True):
+                           resample=False):
     """turn file structure into human-readable pandas dataframe"""
     file_structure = folder_traverse(root_dir, ext=ext)
     reversed_fs = {k + '/' + f: os.path.splitext(f)[0]
@@ -43,7 +43,7 @@ def generate_data_skeleton(root_dir,
 
     for key in reversed_fs:
         if key.endswith('.csv'):
-            df_csv = pd.read_csv(key)
+            df_csv = pd.read_csv(key, dtype=np.str)
             reversed_fs.pop(key)
             break
 
@@ -54,13 +54,14 @@ def generate_data_skeleton(root_dir,
     df = df_csv.merge(right=df,
                       how='left',
                       left_on='image_name',
-                      right_on='filename')
+                      right_on='filename').dropna(axis=0)
 
     train_labels = [string.split(' ') for string in df['tags'].tolist()]
     mlb = preprocessing.MultiLabelBinarizer()
     mlb.fit(train_labels)
     X = np.array(df['path_to_file'])
     y = mlb.transform(train_labels)
+    print(X.shape, y.shape)
 
     if valid_size:
         print('tags one-hot encoded: \n{0}'.format(mlb.classes_))
@@ -99,7 +100,7 @@ def make_queue(paths_to_image, labels, num_epochs=None, shuffle=True):
 def decode_transform(input_queue,
                      shape=None,
                      standardize=True,
-                     distortion=True):
+                     distortion=False):
     """a single decode and transform function that applies standardization with
     mean centralisation."""
     # input_queue allows slicing with 0: path_to_image, 1: encoded label
@@ -110,8 +111,8 @@ def decode_transform(input_queue,
     # crop larger images to 256*256, this func doesn't 'resize'.
     cropped_img = tf.image.resize_image_with_crop_or_pad(
                                 image=original_img,
-                                target_height=256,
-                                target_width=256)
+                                target_height=1000,
+                                target_width=1000)
 
     # resize cropped images to desired shape
     img = tf.image.resize_images(

@@ -42,7 +42,7 @@ def train(n, sess, x, y_, keep_prob, logits, train_image_batch,
                             x: train_image, y_: train_label, keep_prob: .5})
         print(global_step, train_label[0])
 
-        if global_step % 50 == 0:
+        if global_step % 10 == 0:
             valid_image, valid_label = \
                 sess.run(fetches=[valid_image_batch, valid_label_batch])
             valid_accuracy, loss_score, y_pred = sess.run(
