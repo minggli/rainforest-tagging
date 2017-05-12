@@ -132,8 +132,8 @@ def decode_transform(input_queue,
     # crop larger images to 256*256, this func doesn't 'resize'.
     cropped_img = tf.image.resize_image_with_crop_or_pad(
                                 image=original_img,
-                                target_height=1000,
-                                target_width=1000)
+                                target_height=256,
+                                target_width=256)
 
     # resize cropped images to desired shape
     img = tf.image.resize_images(

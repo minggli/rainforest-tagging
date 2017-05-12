@@ -6,7 +6,7 @@ import numpy as np
 MODEL_PATH = './trained_models/'
 IMAGE_PATH = './data/'
 # IMAGE_PATH = './data/original_images/'
-IMAGE_SHAPE = (32, 32, 3)
+IMAGE_SHAPE = (256, 256, 3)
 BATCH_SIZE = 64
 MAX_STEPS = 5000
 ALPHA = 1e-2
