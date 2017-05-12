@@ -13,7 +13,7 @@ if __name__ == '__main__':
     if FETCH or CV_TRAIN or CV_DETECT:
         from .cv import cv
     elif TRAIN or EVAL:
-        from .engine import br
+        from .engine import ovr
     else:
         raise ValueError('missing mode flags.\n\n'
                          'require one of following:\n'
