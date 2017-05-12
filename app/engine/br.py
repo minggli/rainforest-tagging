@@ -19,45 +19,52 @@ from ..pipeline import data_pipe, generate_data_skeleton
 from ..controllers import (train, save_session, predict, submit,
                            restore_session)
 
-tf.set_random_seed(0)
-
 cnn = ConvolutionalNeuralNetwork(shape=IMAGE_SHAPE, num_classes=17)
 
 x, y_ = cnn.x, cnn.y_
 keep_prob = tf.placeholder(tf.float32)
 
-conv_layer_1 = cnn.add_conv_layer(x, [[3, 3, IMAGE_SHAPE[-1], 6], [6]])
-conv_layer_2 = cnn.add_conv_layer(conv_layer_1, [[3, 3, 6, 6], [6]])
+conv_layer_1 = cnn.add_conv_layer(x, [[3, 3, IMAGE_SHAPE[-1], 18], [18]])
+conv_layer_2 = cnn.add_conv_layer(conv_layer_1, [[3, 3, 18, 18], [18]])
 max_pool_1 = cnn.add_pooling_layer(conv_layer_2)
-conv_layer_3 = cnn.add_conv_layer(max_pool_1, [[3, 3, 6, 12], [12]])
-conv_layer_4 = cnn.add_conv_layer(conv_layer_3, [[3, 3, 12, 12], [12]])
+conv_layer_3 = cnn.add_conv_layer(max_pool_1, [[3, 3, 18, 24], [24]])
+conv_layer_4 = cnn.add_conv_layer(conv_layer_3, [[3, 3, 24, 24], [24]])
 max_pool_2 = cnn.add_pooling_layer(conv_layer_4)
-conv_layer_5 = cnn.add_conv_layer(max_pool_2, [[3, 3, 12, 24], [24]])
-conv_layer_6 = cnn.add_conv_layer(conv_layer_5, [[3, 3, 24, 24], [24]])
-conv_layer_7 = cnn.add_conv_layer(conv_layer_6, [[3, 3, 24, 24], [24]])
+conv_layer_5 = cnn.add_conv_layer(max_pool_2, [[3, 3, 24, 36], [36]])
+conv_layer_6 = cnn.add_conv_layer(conv_layer_5, [[3, 3, 36, 36], [36]])
+conv_layer_7 = cnn.add_conv_layer(conv_layer_6, [[3, 3, 36, 36], [36]])
 max_pool_3 = cnn.add_pooling_layer(conv_layer_7)
-conv_layer_8 = cnn.add_conv_layer(max_pool_3, [[3, 3, 24, 36], [36]])
-conv_layer_9 = cnn.add_conv_layer(conv_layer_8, [[3, 3, 36, 36], [36]])
-conv_layer_10 = cnn.add_conv_layer(conv_layer_9, [[3, 3, 36, 36], [36]])
+conv_layer_8 = cnn.add_conv_layer(max_pool_3, [[3, 3, 36, 48], [48]])
+conv_layer_9 = cnn.add_conv_layer(conv_layer_8, [[3, 3, 48, 48], [48]])
+conv_layer_10 = cnn.add_conv_layer(conv_layer_9, [[3, 3, 48, 48], [48]])
 max_pool_4 = cnn.add_pooling_layer(conv_layer_10)
-conv_layer_11 = cnn.add_conv_layer(max_pool_4, [[3, 3, 36, 36], [36]])
-conv_layer_12 = cnn.add_conv_layer(conv_layer_11, [[3, 3, 36, 36], [36]])
-conv_layer_13 = cnn.add_conv_layer(conv_layer_12, [[3, 3, 36, 36], [36]])
+conv_layer_11 = cnn.add_conv_layer(max_pool_4, [[3, 3, 48, 48], [48]])
+conv_layer_12 = cnn.add_conv_layer(conv_layer_11, [[3, 3, 48, 48], [48]])
+conv_layer_13 = cnn.add_conv_layer(conv_layer_12, [[3, 3, 48, 48], [48]])
 max_pool_5 = cnn.add_pooling_layer(conv_layer_13)
-fc1 = cnn.add_dense_layer(max_pool_5, [[1 * 1 * 36, 256], [256],
-                                       [-1, 1 * 1 * 36]])
-drop_out_layer_1 = cnn.add_drop_out_layer(fc1, keep_prob)
+# conv_layer_14 = cnn.add_conv_layer(max_pool_5, [[3, 3, 48, 48], [48]])
+# conv_layer_15 = cnn.add_conv_layer(conv_layer_14, [[3, 3, 48, 48], [48]])
+# max_pool_6 = cnn.add_pooling_layer(conv_layer_15)
+# conv_layer_16 = cnn.add_conv_layer(max_pool_6, [[3, 3, 48, 96], [96]])
+# conv_layer_17 = cnn.add_conv_layer(conv_layer_16, [[3, 3, 96, 96], [96]])
+# max_pool_7 = cnn.add_pooling_layer(conv_layer_17)
+# conv_layer_18 = cnn.add_conv_layer(max_pool_7, [[3, 3, 96, 96], [96]])
+# conv_layer_19 = cnn.add_conv_layer(conv_layer_18, [[3, 3, 96, 96], [96]])
+# max_pool_8 = cnn.add_pooling_layer(conv_layer_19)
+fc1 = cnn.add_dense_layer(max_pool_5, [[1 * 1 * 48, 256], [256],
+                                       [-1, 1 * 1 * 48]])
+# drop_out_layer_1 = cnn.add_drop_out_layer(fc1, keep_prob)
 fc2 = cnn.add_dense_layer(fc1, [[256, 128], [128], [-1, 256]])
-drop_out_layer_2 = cnn.add_drop_out_layer(fc2, keep_prob)
-logits = cnn.add_read_out_layer(drop_out_layer_2)
+# drop_out_layer_2 = cnn.add_drop_out_layer(fc2, keep_prob)
+logits = cnn.add_read_out_layer(fc2)
 # [batch_size, 17]
 
 # default loss function
 cross_entropy = tf.nn.sigmoid_cross_entropy_with_logits(logits=logits,
                                                         labels=y_)
 # implement customised logistic loss function
-# cross_entropy = - (y_ * tf.log(1 / (1 + tf.exp(-logits)) + 1e-9) +
-#                    (1 - y_) * tf.log(1 - 1 / (1 + tf.exp(-logits)) + 1e-9))
+cross_entropy = - (y_ * tf.log(1 / (1 + tf.exp(-logits)) + 1e-9) +
+                   (1 - y_) * tf.log(1 - 1 / (1 + tf.exp(-logits)) + 1e-9))
 loss = tf.reduce_mean(cross_entropy)
 
 # applying label weights to loss function
@@ -72,8 +79,13 @@ if False:
     regularizer = tf.nn.l2_loss(out_weights)
     loss = tf.reduce_mean(loss + BETA * regularizer)
 
-# train Ops
-train_step = tf.train.RMSPropOptimizer(learning_rate=ALPHA).minimize(loss)
+# Numerical Optimisation
+train_step = tf.train.RMSPropOptimizer(learning_rate=ALPHA,
+                                       decay=0.9,
+                                       momentum=.5,
+                                       epsilon=1e-10,
+                                       use_locking=False,
+                                       centered=False).minimize(loss)
 
 # eval
 correct_prediction = tf.equal(tf.round(tf.nn.sigmoid(logits)), y_)
