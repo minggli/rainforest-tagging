@@ -14,7 +14,6 @@ import pandas as pd
 import tensorflow as tf
 
 from sklearn import model_selection, preprocessing
-from imblearn.over_sampling import RandomOverSampler
 
 
 def folder_traverse(root_dir, ext=('.jpg')):
@@ -32,15 +31,28 @@ def folder_traverse(root_dir, ext=('.jpg')):
     return file_structure
 
 
+def resample(feature_index, labels, balance='auto'):
+    """use oversampling to balance class, after split of training set."""
+
+    from imblearn.over_sampling import RandomOverSampler
+
+    ros = RandomOverSampler(ratio=balance)
+    feature_index = np.array(feature_index).reshape(-1, 1)
+    resampled_index, _ = ros.fit_sample(feature_index, labels)
+    resampled_index = [i for nested in resampled_index for i in nested]
+    return resampled_index
+
+
 def generate_data_skeleton(root_dir,
                            ext=('.jpg', '.csv'),
                            valid_size=None,
-                           resample=False):
+                           oversample=False):
     """turn file structure into human-readable pandas dataframe"""
     file_structure = folder_traverse(root_dir, ext=ext)
     reversed_fs = {k + '/' + f: os.path.splitext(f)[0]
                    for k, v in file_structure.items() for f in v}
 
+    # find the first csv and load it in memory and remove it from dictionary
     for key in reversed_fs:
         if key.endswith('.csv'):
             df_csv = pd.read_csv(key, dtype=np.str)
@@ -56,30 +68,39 @@ def generate_data_skeleton(root_dir,
                       left_on='image_name',
                       right_on='filename').dropna(axis=0)
 
-    train_labels = [string.split(' ') for string in df['tags'].tolist()]
+    discrete_labels = [string.split(' ') for string in df['tags'].tolist()]
     mlb = preprocessing.MultiLabelBinarizer()
-    mlb.fit(train_labels)
+    mlb.fit(discrete_labels)
+
     X = np.array(df['path_to_file'])
-    y = mlb.transform(train_labels)
-    print(X.shape, y.shape)
+    y = mlb.transform(discrete_labels)
+    X_codified = df['path_to_file'].index
+    y_codified = pd.Categorical(df['tags']).codes
 
     if valid_size:
         print('tags one-hot encoded: \n{0}'.format(mlb.classes_))
-        if resample:
-            ros = RandomOverSampler(ratio=.33)
-            original_index = np.array(df.index).reshape(-1, 1)
-            codified_label = np.array(pd.Categorical(df['tags']).codes)
-            resampled_index, _ = ros.fit_sample(original_index, codified_label)
-            resampled_index = [i for nested in resampled_index for i in nested]
-            X = X[resampled_index]
-            y = y[resampled_index]
-            print('To balance classes, training data has been oversampled'
-                  ' to: {0}'.format(X.shape[0]))
 
-        X_train, X_valid, y_train, y_valid = model_selection.train_test_split(
-            X, y, test_size=valid_size, stratify=y)
+        X_train_codified, X_valid_codified, y_train_codified,\
+            y_valid_codified = model_selection.train_test_split(
+                                X_codified,
+                                y_codified,
+                                test_size=valid_size)
+
+        if oversample:
+            resampled_train_idx = resample(X_train_codified, y_train_codified)
+            resampled_valid_idx = resample(X_valid_codified, y_valid_codified)
+
+            X_train, y_train = X[resampled_train_idx], y[resampled_train_idx]
+            X_valid, y_valid = X[resampled_valid_idx], y[resampled_valid_idx]
+            print('To balance classes, training data has been oversampled'
+                  ' to: {0}'.format(len(resampled_train_idx) +
+                                    len(resampled_valid_idx)))
+        elif not oversample:
+            X_train, y_train = X[X_train_codified], y[X_train_codified]
+            X_valid, y_valid = X[X_valid_codified], y[X_valid_codified]
+
         print('training: {0} samples; validation: {1} samples.'.format(
-            X_train.shape[0], X_valid.shape[0]))
+                                        X_train.shape[0], X_valid.shape[0]))
         return X_train, y_train, X_valid, y_valid
     elif not valid_size:
         print('test: {0} samples.'.format(X.shape[0]))
