@@ -46,13 +46,14 @@ def train(n, sess, x, y_, keep_prob, logits, train_image_batch,
             valid_image, valid_label = \
                 sess.run(fetches=[valid_image_batch, valid_label_batch])
             valid_accuracy, loss_score, y_pred = sess.run(
-                fetches=[metric, loss, tf.round(tf.nn.sigmoid(logits))],
+                fetches=[metric, loss, tf.nn.sigmoid(logits)],
                 feed_dict={x: valid_image, y_: valid_label, keep_prob: 1.0})
             # beta score as specified in competition with beta = 2
             f2_score = metrics.fbeta_score(y_true=valid_label,
-                                           y_pred=y_pred,
+                                           y_pred=y_pred >= .5,
                                            beta=2,
                                            average='samples')
+            print([[round(i, 2) for i in pred] for pred in y_pred[:5]])
             print("step {0} of {3}, valid accuracy: {1:.4f}, F2 score: {4:.4f}"
                   " log loss: {2:.4f}".format(global_step, valid_accuracy,
                                               loss_score, n, f2_score))
