@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 
+import os
 import sys
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+
 
 FETCH = True if 'FETCH' in map(str.upper, sys.argv[1:]) else False
 CV_TRAIN = True if 'CV_TRAIN' in map(str.upper, sys.argv[1:]) else False

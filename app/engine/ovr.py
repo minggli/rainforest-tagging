@@ -23,38 +23,29 @@ cnn = ConvolutionalNeuralNetwork(shape=IMAGE_SHAPE, num_classes=17)
 
 x, y_, keep_prob = cnn.x, cnn.y_, cnn.keep_prob
 
-conv_layer_1 = cnn.add_conv_layer(x, [[3, 3, IMAGE_SHAPE[-1], 18], [18]])
-conv_layer_2 = cnn.add_conv_layer(conv_layer_1, [[3, 3, 18, 18], [18]])
+conv_layer_1 = cnn.add_conv_layer(x, [[3, 3, IMAGE_SHAPE[-1], 6], [6]])
+conv_layer_2 = cnn.add_conv_layer(conv_layer_1, [[3, 3, 6, 6], [6]])
 max_pool_1 = cnn.add_pooling_layer(conv_layer_2)
-conv_layer_3 = cnn.add_conv_layer(max_pool_1, [[3, 3, 18, 24], [24]])
-conv_layer_4 = cnn.add_conv_layer(conv_layer_3, [[3, 3, 24, 24], [24]])
+conv_layer_3 = cnn.add_conv_layer(max_pool_1, [[3, 3, 6, 12], [12]])
+conv_layer_4 = cnn.add_conv_layer(conv_layer_3, [[3, 3, 12, 12], [12]])
 max_pool_2 = cnn.add_pooling_layer(conv_layer_4)
-conv_layer_5 = cnn.add_conv_layer(max_pool_2, [[3, 3, 24, 36], [36]])
-conv_layer_6 = cnn.add_conv_layer(conv_layer_5, [[3, 3, 36, 36], [36]])
-conv_layer_7 = cnn.add_conv_layer(conv_layer_6, [[3, 3, 36, 36], [36]])
+conv_layer_5 = cnn.add_conv_layer(max_pool_2, [[3, 3, 12, 18], [18]])
+conv_layer_6 = cnn.add_conv_layer(conv_layer_5, [[3, 3, 18, 18], [18]])
+conv_layer_7 = cnn.add_conv_layer(conv_layer_6, [[3, 3, 18, 18], [18]])
 max_pool_3 = cnn.add_pooling_layer(conv_layer_7)
-conv_layer_8 = cnn.add_conv_layer(max_pool_3, [[3, 3, 36, 48], [48]])
-conv_layer_9 = cnn.add_conv_layer(conv_layer_8, [[3, 3, 48, 48], [48]])
-conv_layer_10 = cnn.add_conv_layer(conv_layer_9, [[3, 3, 48, 48], [48]])
+conv_layer_8 = cnn.add_conv_layer(max_pool_3, [[3, 3, 18, 24], [24]])
+conv_layer_9 = cnn.add_conv_layer(conv_layer_8, [[3, 3, 24, 24], [24]])
+conv_layer_10 = cnn.add_conv_layer(conv_layer_9, [[3, 3, 24, 24], [24]])
 max_pool_4 = cnn.add_pooling_layer(conv_layer_10)
-conv_layer_11 = cnn.add_conv_layer(max_pool_4, [[3, 3, 48, 48], [48]])
-conv_layer_12 = cnn.add_conv_layer(conv_layer_11, [[3, 3, 48, 48], [48]])
-conv_layer_13 = cnn.add_conv_layer(conv_layer_12, [[3, 3, 48, 48], [48]])
+conv_layer_11 = cnn.add_conv_layer(max_pool_4, [[3, 3, 24, 24], [24]])
+conv_layer_12 = cnn.add_conv_layer(conv_layer_11, [[3, 3, 24, 24], [24]])
+conv_layer_13 = cnn.add_conv_layer(conv_layer_12, [[3, 3, 24, 24], [24]])
 max_pool_5 = cnn.add_pooling_layer(conv_layer_13)
-# conv_layer_14 = cnn.add_conv_layer(max_pool_5, [[3, 3, 48, 48], [48]])
-# conv_layer_15 = cnn.add_conv_layer(conv_layer_14, [[3, 3, 48, 48], [48]])
-# max_pool_6 = cnn.add_pooling_layer(conv_layer_15)
-# conv_layer_16 = cnn.add_conv_layer(max_pool_6, [[3, 3, 48, 96], [96]])
-# conv_layer_17 = cnn.add_conv_layer(conv_layer_16, [[3, 3, 96, 96], [96]])
-# max_pool_7 = cnn.add_pooling_layer(conv_layer_17)
-# conv_layer_18 = cnn.add_conv_layer(max_pool_7, [[3, 3, 96, 96], [96]])
-# conv_layer_19 = cnn.add_conv_layer(conv_layer_18, [[3, 3, 96, 96], [96]])
-# max_pool_8 = cnn.add_pooling_layer(conv_layer_19)
-fc1 = cnn.add_dense_layer(max_pool_5, [[1 * 1 * 48, 256], [256]])
-# drop_out_layer_1 = cnn.add_drop_out_layer(fc1, keep_prob)
-fc2 = cnn.add_dense_layer(fc1, [[256, 128], [128]])
-# drop_out_layer_2 = cnn.add_drop_out_layer(fc2, keep_prob)
-logits = cnn.add_read_out_layer(fc2)
+fc1 = cnn.add_dense_layer(max_pool_5, [[1 * 1 * 24, 256], [256]])
+drop_out_layer_1 = cnn.add_drop_out_layer(fc1, keep_prob)
+fc2 = cnn.add_dense_layer(drop_out_layer_1, [[256, 128], [128]])
+drop_out_layer_2 = cnn.add_drop_out_layer(fc2, keep_prob)
+logits = cnn.add_read_out_layer(drop_out_layer_2)
 # [batch_size, 17] of logits (θ transpose X) for each of 17 classes
 
 # Tensorflow loss function API
@@ -67,15 +58,15 @@ cross_entropy = tf.nn.sigmoid_cross_entropy_with_logits(logits=logits,
 
 # applying label weights to loss function
 if True:
-    class_weight = tf.constant([[TAGS_WEIGHTINGS]], shape=[1, 17])
-    cross_entropy = class_weight * cross_entropy
+    class_weights = tf.constant([[TAGS_WEIGHTINGS]], shape=[1, 17])
+    cross_entropy *= class_weights
 
 # add L2 regularization on weights from readout layer and dense layers
 if True:
     weights2norm = [var for var in tf.trainable_variables()
-                    if var.name.startswith(('weight', 'bias'))][-6:]
+                    if var.name.startswith(('weight', 'bias'))][-10:]
     regularizers = tf.add_n([tf.nn.l2_loss(var) for var in weights2norm])
-    cross_entropy = cross_entropy + BETA * regularizers
+    cross_entropy += BETA * regularizers
 
 loss = tf.reduce_mean(cross_entropy)
 

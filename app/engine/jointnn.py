@@ -26,21 +26,19 @@ from ..controllers import (train, save_session, predict, submit,
 # Convolutional Neural Network as VGG-16
 with tf.variable_scope('VGG-16'):
     cnn = ConvolutionalNeuralNetwork(shape=IMAGE_SHAPE, num_classes=None)
+    x, keep_prob = cnn.x, cnn.keep_prob
 
-    x = cnn.x
-    keep_prob = tf.placeholder(tf.float32)
-
-    conv_layer_1 = cnn.add_conv_layer(x, [[3, 3, 3, 6], [6]])
-    conv_layer_2 = cnn.add_conv_layer(conv_layer_1, [[3, 3, 6, 6], [6]])
+    conv_layer_1 = cnn.add_conv_layer(x, [[3, 3, IMAGE_SHAPE[-1], 18], [18]])
+    conv_layer_2 = cnn.add_conv_layer(conv_layer_1, [[3, 3, 18, 18], [18]])
     max_pool_1 = cnn.add_pooling_layer(conv_layer_2)
-    conv_layer_3 = cnn.add_conv_layer(max_pool_1, [[3, 3, 6, 12], [12]])
-    conv_layer_4 = cnn.add_conv_layer(conv_layer_3, [[3, 3, 12, 12], [12]])
+    conv_layer_3 = cnn.add_conv_layer(max_pool_1, [[3, 3, 18, 24], [24]])
+    conv_layer_4 = cnn.add_conv_layer(conv_layer_3, [[3, 3, 24, 24], [24]])
     max_pool_2 = cnn.add_pooling_layer(conv_layer_4)
-    conv_layer_5 = cnn.add_conv_layer(max_pool_2, [[3, 3, 12, 24], [24]])
-    conv_layer_6 = cnn.add_conv_layer(conv_layer_5, [[3, 3, 24, 24], [24]])
-    conv_layer_7 = cnn.add_conv_layer(conv_layer_6, [[3, 3, 24, 24], [24]])
+    conv_layer_5 = cnn.add_conv_layer(max_pool_2, [[3, 3, 24, 36], [36]])
+    conv_layer_6 = cnn.add_conv_layer(conv_layer_5, [[3, 3, 36, 36], [36]])
+    conv_layer_7 = cnn.add_conv_layer(conv_layer_6, [[3, 3, 36, 36], [36]])
     max_pool_3 = cnn.add_pooling_layer(conv_layer_7)
-    conv_layer_8 = cnn.add_conv_layer(max_pool_3, [[3, 3, 24, 48], [48]])
+    conv_layer_8 = cnn.add_conv_layer(max_pool_3, [[3, 3, 36, 48], [48]])
     conv_layer_9 = cnn.add_conv_layer(conv_layer_8, [[3, 3, 48, 48], [48]])
     conv_layer_10 = cnn.add_conv_layer(conv_layer_9, [[3, 3, 48, 48], [48]])
     max_pool_4 = cnn.add_pooling_layer(conv_layer_10)
@@ -48,10 +46,10 @@ with tf.variable_scope('VGG-16'):
     conv_layer_12 = cnn.add_conv_layer(conv_layer_11, [[3, 3, 48, 48], [48]])
     conv_layer_13 = cnn.add_conv_layer(conv_layer_12, [[3, 3, 48, 48], [48]])
     max_pool_5 = cnn.add_pooling_layer(conv_layer_13)
-    fc1 = cnn.add_dense_layer(max_pool_5, [[4 * 4 * 48, 600], [600],
-                                           [-1, 4 * 4 * 48]])
-    img_vector = cnn.add_dense_layer(fc1, [[600, 300], [300], [-1, 600]])
-    # [batch_size, 300] so image has vector representation of 128 dimensions.
+    fc1 = cnn.add_dense_layer(max_pool_5, [[1 * 1 * 48, 256], [256]])
+    img_vector = cnn.add_dense_layer(fc1, [[256, 128], [128]])
+    # [batch_size, 128] vector representation of image
+
 
 with tf.variable_scope('LSTM'):
     # using Tensorflow API first before using self-implemented lstm module
@@ -74,32 +72,43 @@ with tf.variable_scope('LSTM'):
                                             initial_state=lstm_cell.zero_state)
 
 
-# # default loss function
-# cross_entropy = \
-#         tf.nn.sigmoid_cross_entropy_with_logits(logits=logits, labels=y_)
-# loss = tf.reduce_mean(cross_entropy)
+
+# # Tensorflow loss function API
+# cross_entropy = tf.nn.sigmoid_cross_entropy_with_logits(logits=logits,
+#                                                         labels=y_)
+# # Explicit logistic loss function
+# # cross_entropy = - (y_ * tf.log(1 / (1 + tf.exp(-logits)) + 1e-9) +
+# #                    (1 - y_) * tf.log(1 - 1 / (1 + tf.exp(-logits)) + 1e-9))
+# # [batch_size, 17] of logistic loss for each of 17 classes
 #
 # # applying label weights to loss function
 # if True:
-#     class_weight = tf.constant([TAGS_WEIGHTINGS])
-#     # weight_per_label = tf.transpose(tf.multiply(y_, class_weight))
-#     loss = tf.reduce_mean(class_weight * cross_entropy)
+#     class_weights = tf.constant([[TAGS_WEIGHTINGS]], shape=[1, 17])
+#     cross_entropy *= class_weights
 #
-# # add L2 regularization on weights from readout layer
-# if False:
-#     out_weights = [var for var in tf.trainable_variables()
-#                    if var.name.startswith('Variable_')][-2]
-#     regularizer = tf.nn.l2_loss(out_weights)
-#     loss = tf.reduce_mean(loss + BETA * regularizer)
+# # add L2 regularization on weights from readout layer and dense layers
+# if True:
+#     weights2norm = [var for var in tf.trainable_variables()
+#                     if var.name.startswith(('weight', 'bias'))][-6:]
+#     regularizers = tf.add_n([tf.nn.l2_loss(var) for var in weights2norm])
+#     cross_entropy += BETA * regularizers
 #
-# # train Ops
-# train_step = tf.train.RMSPropOptimizer(learning_rate=ALPHA).minimize(loss)
+# loss = tf.reduce_mean(cross_entropy)
+#
+# for var in tf.trainable_variables():
+#     print(var)
+#
+# # Numerical Optimisation
+# train_step = tf.train.RMSPropOptimizer(learning_rate=ALPHA,
+#                                        decay=0.9,
+#                                        momentum=.5,
+#                                        epsilon=1e-10,
+#                                        use_locking=False,
+#                                        centered=False).minimize(loss)
 #
 # # eval
-# correct_prediction = tf.equal(tf.round(tf.nn.sigmoid(logits)), tf.round(y_))
-# # accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
-# accuracy = tf.reduce_mean(
-#                   tf.reduce_min(tf.cast(correct_prediction, tf.float32), 1))
+# correct_prediction = tf.equal(tf.round(tf.nn.sigmoid(logits)), y_)
+# accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 #
 # # saver
 # saver = tf.train.Saver(max_to_keep=5, var_list=tf.trainable_variables())
@@ -131,7 +140,7 @@ with tf.variable_scope('LSTM'):
 #     sess.run(init_op)
 #
 #     with sess:
-#         train(MAX_STEPS, sess, x, y_, keep_prob, train_image_batch,
+#         train(MAX_STEPS, sess, x, y_, keep_prob, logits, train_image_batch,
 #               train_label_batch, valid_image_batch, valid_label_batch,
 #               train_step, accuracy, loss)
 #         save_session(sess, path=MODEL_PATH, sav=saver)
@@ -139,8 +148,7 @@ with tf.variable_scope('LSTM'):
 # if EVAL:
 #
 #     test_file_array, _ = \
-#         generate_data_skeleton(root_dir=IMAGE_PATH + 'test',
-#                                valid_size=None)
+#         generate_data_skeleton(root_dir=IMAGE_PATH + 'test', valid_size=None)
 #     # no shuffling or more than 1 epoch of test set, only through once.
 #     test_image_batch = data_pipe(
 #                             test_file_array,
