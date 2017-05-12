@@ -50,10 +50,9 @@ max_pool_5 = cnn.add_pooling_layer(conv_layer_13)
 # conv_layer_18 = cnn.add_conv_layer(max_pool_7, [[3, 3, 96, 96], [96]])
 # conv_layer_19 = cnn.add_conv_layer(conv_layer_18, [[3, 3, 96, 96], [96]])
 # max_pool_8 = cnn.add_pooling_layer(conv_layer_19)
-fc1 = cnn.add_dense_layer(max_pool_5, [[1 * 1 * 48, 256], [256],
-                                       [-1, 1 * 1 * 48]])
+fc1 = cnn.add_dense_layer(max_pool_5, [[1 * 1 * 48, 256], [256]])
 # drop_out_layer_1 = cnn.add_drop_out_layer(fc1, keep_prob)
-fc2 = cnn.add_dense_layer(fc1, [[256, 128], [128], [-1, 256]])
+fc2 = cnn.add_dense_layer(fc1, [[256, 128], [128]])
 # drop_out_layer_2 = cnn.add_drop_out_layer(fc2, keep_prob)
 logits = cnn.add_read_out_layer(fc2)
 # [batch_size, 17] of logits (θ transpose X) for each of 17 classes
