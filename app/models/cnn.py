@@ -18,12 +18,12 @@ class ConvolutionalNeuralNetwork:
     @staticmethod
     def weight_variable(shape):
         initial = tf.truncated_normal(shape, stddev=0.1)
-        return tf.Variable(initial)
+        return tf.Variable(initial, name='weight')
 
     @staticmethod
     def bias_variable(shape):
         initial = tf.constant(0.1, shape=shape)
-        return tf.Variable(initial)
+        return tf.Variable(initial, name='bias')
 
     @staticmethod
     def conv2d(x, W):
@@ -68,14 +68,15 @@ class ConvolutionalNeuralNetwork:
 
     @property
     def y_(self):
-        """true label, in one hot format"""
+        """ground truth, in one-hot format"""
         return tf.placeholder(dtype=tf.float32,
                               shape=(None, self._n_class),
                               name='label')
 
-    # @property
-    # def keep_prob(self):
-    #     return tf.placeholder(dtype=tf.float32, name='keepprob')
+    @property
+    def keep_prob(self):
+        """the probability constant to keep output from previous layer."""
+        return tf.placeholder(dtype=tf.float32, name='keep_rate')
 
     def add_conv_layer(self, input_layer, hyperparams, func='relu'):
         """Convolution Layer with hyperparamters and activation_func"""
