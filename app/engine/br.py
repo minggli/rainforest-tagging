@@ -21,8 +21,7 @@ from ..controllers import (train, save_session, predict, submit,
 
 cnn = ConvolutionalNeuralNetwork(shape=IMAGE_SHAPE, num_classes=17)
 
-x, y_ = cnn.x, cnn.y_
-keep_prob = tf.placeholder(tf.float32)
+x, y_, keep_prob = cnn.x, cnn.y_, cnn.keep_prob
 
 conv_layer_1 = cnn.add_conv_layer(x, [[3, 3, IMAGE_SHAPE[-1], 18], [18]])
 conv_layer_2 = cnn.add_conv_layer(conv_layer_1, [[3, 3, 18, 18], [18]])
@@ -57,27 +56,32 @@ fc1 = cnn.add_dense_layer(max_pool_5, [[1 * 1 * 48, 256], [256],
 fc2 = cnn.add_dense_layer(fc1, [[256, 128], [128], [-1, 256]])
 # drop_out_layer_2 = cnn.add_drop_out_layer(fc2, keep_prob)
 logits = cnn.add_read_out_layer(fc2)
-# [batch_size, 17]
+# [batch_size, 17] of logits (θ transpose X) for each of 17 classes
 
-# default loss function
+# Tensorflow loss function API
 cross_entropy = tf.nn.sigmoid_cross_entropy_with_logits(logits=logits,
                                                         labels=y_)
-# implement customised logistic loss function
-cross_entropy = - (y_ * tf.log(1 / (1 + tf.exp(-logits)) + 1e-9) +
-                   (1 - y_) * tf.log(1 - 1 / (1 + tf.exp(-logits)) + 1e-9))
-loss = tf.reduce_mean(cross_entropy)
+# Explicit logistic loss function
+# cross_entropy = - (y_ * tf.log(1 / (1 + tf.exp(-logits)) + 1e-9) +
+#                    (1 - y_) * tf.log(1 - 1 / (1 + tf.exp(-logits)) + 1e-9))
+# [batch_size, 17] of logistic loss for each of 17 classes
 
 # applying label weights to loss function
-if False:
+if True:
     class_weight = tf.constant([[TAGS_WEIGHTINGS]], shape=[1, 17])
-    loss = tf.reduce_mean(class_weight * cross_entropy)
+    cross_entropy = class_weight * cross_entropy
 
-# add L2 regularization on weights from readout layer
-if False:
-    out_weights = [var for var in tf.trainable_variables()
-                   if var.name.startswith('Variable_')][-2]
-    regularizer = tf.nn.l2_loss(out_weights)
-    loss = tf.reduce_mean(loss + BETA * regularizer)
+# add L2 regularization on weights from readout layer and dense layers
+if True:
+    weights2norm = [var for var in tf.trainable_variables()
+                    if var.name.startswith(('weight', 'bias'))][-6:]
+    regularizers = tf.add_n([tf.nn.l2_loss(var) for var in weights2norm])
+    cross_entropy = cross_entropy + BETA * regularizers
+
+loss = tf.reduce_mean(cross_entropy)
+
+for var in tf.trainable_variables():
+    print(var)
 
 # Numerical Optimisation
 train_step = tf.train.RMSPropOptimizer(learning_rate=ALPHA,
