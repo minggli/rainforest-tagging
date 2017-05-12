@@ -50,7 +50,7 @@ class ConvolutionalNeuralNetwork:
                               padding='SAME')
 
     @staticmethod
-    def non_linearity(activation):
+    def nonlinearity(activation):
         if activation == 'sigmoid':
             return tf.nn.sigmoid
         elif activation == 'relu':
@@ -83,35 +83,29 @@ class ConvolutionalNeuralNetwork:
         W = self.weight_variable(shape=hyperparams[0])
         b = self.bias_variable(shape=hyperparams[1])
 
-        hypothesis_conv = self.non_linearity(func)(
-                          self.conv2d(input_layer, W) + b)
-        return hypothesis_conv
+        return self.nonlinearity(func)(self.conv2d(input_layer, W) + b)
 
     def add_pooling_layer(self, input_layer):
         """max pooling layer to reduce overfitting"""
-        hypothesis_pool = self.max_pool(input_layer)
-        return hypothesis_pool
+        return self.max_pool(input_layer)
 
     def add_dense_layer(self, input_layer, hyperparams, func='relu'):
         """Densely Connected Layer with hyperparamters and activation_func"""
         W = self.weight_variable(shape=hyperparams[0])
         b = self.bias_variable(shape=hyperparams[1])
 
-        flat_x = tf.reshape(input_layer, hyperparams[2])
-        hypothesis = self.non_linearity(func)(tf.matmul(flat_x, W) + b)
-        return hypothesis
+        reshaped_x = tf.reshape(input_layer, shape=[-1, hyperparams[0][0]])
+        return self.nonlinearity(func)(tf.matmul(reshaped_x, W) + b)
 
     def add_drop_out_layer(self, input_layer, keep_prob):
         """drop out layer to reduce overfitting"""
-        hypothesis_drop = tf.nn.dropout(input_layer, keep_prob)
-        return hypothesis_drop
+        return tf.nn.dropout(input_layer, keep_prob)
 
     def add_read_out_layer(self, input_layer):
         """read out layer with output shape of [batch_size, num_classes]
-        to feed into softmax"""
+        in order to feed into softmax"""
         input_layer_m = int(input_layer.get_shape()[1])
         W = self.weight_variable(shape=[input_layer_m, self._n_class])
         b = self.bias_variable(shape=[self._n_class])
 
-        logits = tf.matmul(input_layer, W) + b
-        return logits
+        return tf.matmul(input_layer, W) + b
