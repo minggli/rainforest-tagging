@@ -41,7 +41,7 @@ conv_layer_11 = cnn.add_conv_layer(max_pool_4, [[3, 3, 48, 48], [48]])
 conv_layer_12 = cnn.add_conv_layer(conv_layer_11, [[3, 3, 48, 48], [48]])
 conv_layer_13 = cnn.add_conv_layer(conv_layer_12, [[3, 3, 48, 48], [48]])
 max_pool_5 = cnn.add_pooling_layer(conv_layer_13)
-fc1 = cnn.add_dense_layer(max_pool_5, [[2 * 2 * 48, 2048], [2048]])
+fc1 = cnn.add_dense_layer(max_pool_5, [[1 * 1 * 48, 2048], [2048]])
 # drop_out_layer_1 = cnn.add_drop_out_layer(fc1, keep_prob)
 fc2 = cnn.add_dense_layer(fc1, [[2048, 1024], [1024]])
 # drop_out_layer_2 = cnn.add_drop_out_layer(fc2, keep_prob)
@@ -64,7 +64,7 @@ if True:
 # add L2 regularization on weights from readout layer and dense layers
 if False:
     weights2norm = [var for var in tf.trainable_variables()
-                    if var.name.startswith(('weight', 'bias'))][-6:]
+                    if var.name.startswith(('weight', 'bias'))][-4:]
     regularizers = tf.add_n([tf.nn.l2_loss(var) for var in weights2norm])
     cross_entropy += BETA * regularizers
 

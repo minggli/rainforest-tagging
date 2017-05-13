@@ -8,7 +8,7 @@ convert CMYK colourspace to RGB
 
 import os
 import sys
-project_folder = os.path.realpath('.')
+project_folder = os.path.realpath('..')
 sys.path.append(project_folder)
 from PIL import Image
 

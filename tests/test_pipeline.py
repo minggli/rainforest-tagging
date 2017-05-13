@@ -8,18 +8,21 @@ to see if data flows through app.pipeline module as expected.
 
 import os
 import sys
-sys.path.append(os.path.realpath('.'))
+project_folder = os.path.realpath('..')
+sys.path.append(project_folder)
 import tensorflow as tf
 import numpy as np
 
 from PIL import Image
-
 from app.pipeline import generate_data_skeleton, data_pipe, multithreading
 from app.settings import IMAGE_PATH, BATCH_SIZE, IMAGE_SHAPE
 
 
 train_file_array, train_label_array, valid_file_array, valid_label_array =\
-    generate_data_skeleton(root_dir=IMAGE_PATH + 'train', valid_size=.15,
+    generate_data_skeleton(root_dir=os.path.join(project_folder,
+                                                 IMAGE_PATH,
+                                                 'train'),
+                           valid_size=.15,
                            ext=('.png', '.csv'))
 train_image_batch, train_label_batch = data_pipe(
                                         train_file_array,

@@ -11,7 +11,7 @@ GeoTiff is to be read by OpenCV
 
 import os
 import sys
-project_folder = os.path.realpath('.')
+project_folder = os.path.realpath('..')
 sys.path.append(project_folder)
 import cv2
 
