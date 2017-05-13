@@ -10,7 +10,8 @@ from app.settings import IMAGE_PATH, BATCH_SIZE, IMAGE_SHAPE
 
 
 train_file_array, train_label_array, valid_file_array, valid_label_array =\
-    generate_data_skeleton(root_dir=IMAGE_PATH + 'train', valid_size=.15)
+    generate_data_skeleton(root_dir=IMAGE_PATH + 'train', valid_size=.15,
+                           ext=('.png', '.csv'))
 train_image_batch, train_label_batch = data_pipe(
                                         train_file_array,
                                         train_label_array,
@@ -44,6 +45,4 @@ with sess:
     total = test_queue()
     n = int(input('choose a image to test'))
     print(total[n])
-    Image.fromarray(np.array(total[n])).show()
-    Image.fromarray(np.array(total[n+BATCH_SIZE])).show()
-    Image.fromarray(np.array(total[n+2*BATCH_SIZE])).show()
+    Image.fromarray(np.array(total[n], dtype=np.uint8)).show()

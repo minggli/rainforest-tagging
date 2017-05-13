@@ -96,7 +96,9 @@ sess = tf.Session()
 if TRAIN:
     # prepare data feed
     train_file_array, train_label_array, valid_file_array, valid_label_array =\
-        generate_data_skeleton(root_dir=IMAGE_PATH + 'train', valid_size=.15)
+        generate_data_skeleton(root_dir=IMAGE_PATH + 'train',
+                               valid_size=.15,
+                               ext=('.png', '.csv'))
     train_image_batch, train_label_batch = data_pipe(
                                             train_file_array,
                                             train_label_array,
@@ -125,7 +127,9 @@ if TRAIN:
 if EVAL:
 
     test_file_array, _ = \
-        generate_data_skeleton(root_dir=IMAGE_PATH + 'test', valid_size=None)
+        generate_data_skeleton(root_dir=IMAGE_PATH + 'test',
+                               valid_size=None,
+                               ext=('.png', '.csv'))
     # no shuffling or more than 1 epoch of test set, only through once.
     test_image_batch = data_pipe(
                             test_file_array,

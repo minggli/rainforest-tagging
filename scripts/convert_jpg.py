@@ -1,9 +1,9 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-convertjpg
+convert_jpg
 
-convert CMYK JPG colourspace to RGB JPG
+convert CMYK colourspace to RGB
 """
 
 import os
