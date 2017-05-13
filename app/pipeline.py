@@ -128,7 +128,7 @@ def decode_transform(input_queue,
     label_queue = input_queue[1]
     image_queue = tf.read_file(input_queue[0])
 
-    # !!! decode_jpeg only accepts RGB jpg and not raising error for CMYK :(
+    # !!! decode_jpeg only accepts RGB jpg but not raising error for CMYK :(
     original_image = tf.image.decode_image(image_queue, channels=0)
 
     # crop larger images to 256*256, this func doesn't 'resize'.

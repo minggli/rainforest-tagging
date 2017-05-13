@@ -62,7 +62,7 @@ if True:
     cross_entropy *= class_weights
 
 # add L2 regularization on weights from readout layer and dense layers
-if True:
+if False:
     weights2norm = [var for var in tf.trainable_variables()
                     if var.name.startswith(('weight', 'bias'))][-6:]
     regularizers = tf.add_n([tf.nn.l2_loss(var) for var in weights2norm])

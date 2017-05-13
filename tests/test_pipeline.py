@@ -1,5 +1,14 @@
+#! /usr/bin/env python3
 # -*- coding: utf-8 -*-
+"""
+test_pipeline
 
+to see if data flows through app.pipeline module as expected.
+"""
+
+import os
+import sys
+sys.path.append(os.path.realpath('.'))
 import tensorflow as tf
 import numpy as np
 
