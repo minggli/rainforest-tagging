@@ -18,7 +18,7 @@ import cv2
 from app.pipeline import folder_traverse
 from app.settings import IMAGE_PATH
 
-fs = folder_traverse(os.path.join(project_folder, IMAGE_PATH, 'train'),
+fs = folder_traverse(os.path.join(project_folder, IMAGE_PATH),
                      ext=('.tif'))
 
 path_to_images = list()
