@@ -6,6 +6,7 @@ handle tensorflow session relating to ConvNet
 """
 import os
 import time
+import numpy as np
 import pandas as pd
 import tensorflow as tf
 
@@ -50,7 +51,7 @@ def train(n, sess, x, y_, keep_prob, logits, train_image_batch,
                 feed_dict={x: valid_image, y_: valid_label, keep_prob: 1.0})
             # beta score as specified in competition with beta = 2
             f2_score = metrics.fbeta_score(y_true=valid_label,
-                                           y_pred=y_pred >= .5,
+                                           y_pred=y_pred > .5,
                                            beta=2,
                                            average='samples')
             print("step {0} of {3}, valid accuracy: {1:.4f}, F2 score: {4:.4f}"
@@ -60,28 +61,28 @@ def train(n, sess, x, y_, keep_prob, logits, train_image_batch,
 
 @timeit
 @multithreading
-def predict(sess, x, keep_prob, logits, test_image_batch, tags):
+def predict(sess, x, keep_prob, logits, test_image_batch):
     """predict test set using graph previously trained and saved."""
     complete_pred = list()
     while 1:
         try:
             test_image = sess.run(test_image_batch)
-            batch_pred = sess.run(tf.round(tf.nn.sigmoid(logits)),
+            batch_pred = sess.run(tf.nn.sigmoid(logits),
                                   feed_dict={x: test_image, keep_prob: 1.0})
             complete_pred.append(batch_pred)
-            print(batch_pred[0])
         except tf.errors.OutOfRangeError as e:
             # pipe exhausted with pre-determined number of epochs i.e. 1
             break
-    unravelled_array = [' '.join(tags[array.nonzero()])
-                        for nested_arrays in complete_pred
+    unravelled_array = [array for nested_arrays in complete_pred
                         for array in nested_arrays]
     return unravelled_array
 
 
 @timeit
-def submit(predicted_input, path):
+def submit(predicted_input, path, tags):
     """"produce an output file with predicted probabilities."""
+    predicted_input = [' '.join(np.array(tags)[array.nonzero()])
+                       for array in np.around(predicted_input)]
     now = datetime.now().strftime('%Y%m%d%H%M%S')
     template = pd.read_csv(
                 filepath_or_buffer=path + '/sample_submission.csv',

@@ -10,14 +10,13 @@ Simonyan K. & Zisserman A. (2015)
 """
 
 import tensorflow as tf
-
-from ..main import EVAL, TRAIN
+import numpy as np
+from ..main import EVAL, TRAIN, ENSEMBLE
 from ..models.cnn import ConvolutionalNeuralNetwork
 from ..settings import (IMAGE_PATH, IMAGE_SHAPE, BATCH_SIZE, MODEL_PATH,
                         MAX_STEPS, ALPHA, BETA, TAGS, TAGS_WEIGHTINGS)
 from ..pipeline import data_pipe, generate_data_skeleton
-from ..controllers import (train, save_session, predict, submit,
-                           restore_session)
+from ..controllers import train, save_session, predict, restore_session, submit
 
 cnn = ConvolutionalNeuralNetwork(shape=IMAGE_SHAPE, num_classes=17)
 
@@ -70,8 +69,8 @@ if False:
 
 loss = tf.reduce_mean(cross_entropy)
 
-for var in tf.trainable_variables():
-    print(var)
+# for var in tf.trainable_variables():
+#     print(var)
 
 # Numerical Optimisation
 train_step = tf.train.RMSPropOptimizer(learning_rate=ALPHA,
@@ -92,60 +91,67 @@ saver = tf.train.Saver(max_to_keep=5, var_list=tf.trainable_variables())
 
 # session
 sess = tf.Session()
+ensemble_probs = list()
 
-if TRAIN:
-    # prepare data feed
-    train_file_array, train_label_array, valid_file_array, valid_label_array =\
-        generate_data_skeleton(root_dir=IMAGE_PATH + 'train',
-                               valid_size=.15,
-                               ext=('.png', '.csv'))
-    train_image_batch, train_label_batch = data_pipe(
-                                            train_file_array,
-                                            train_label_array,
-                                            num_epochs=None,
-                                            shape=IMAGE_SHAPE,
-                                            batch_size=BATCH_SIZE,
-                                            shuffle=True)
-    valid_image_batch, valid_label_batch = data_pipe(
-                                            valid_file_array,
-                                            valid_label_array,
-                                            num_epochs=None,
-                                            shape=IMAGE_SHAPE,
-                                            batch_size=BATCH_SIZE,
-                                            shuffle=True)
+for iteration in range(ENSEMBLE):
 
-    init_op = tf.group(tf.local_variables_initializer(),
-                       tf.global_variables_initializer())
-    sess.run(init_op)
+    with sess.as_default():
 
-    with sess:
-        train(MAX_STEPS, sess, x, y_, keep_prob, logits, train_image_batch,
-              train_label_batch, valid_image_batch, valid_label_batch,
-              train_step, accuracy, loss)
-        save_session(sess, path=MODEL_PATH, sav=saver)
+        if TRAIN:
 
-if EVAL:
+            train_file_array, train_label_array, valid_file_array,\
+                valid_label_array = generate_data_skeleton(
+                                               root_dir=IMAGE_PATH + 'train',
+                                               valid_size=.15,
+                                               ext=('.png', '.csv'))
+            train_image_batch, train_label_batch = data_pipe(
+                                                    train_file_array,
+                                                    train_label_array,
+                                                    num_epochs=None,
+                                                    shape=IMAGE_SHAPE,
+                                                    batch_size=BATCH_SIZE,
+                                                    shuffle=True)
+            valid_image_batch, valid_label_batch = data_pipe(
+                                                    valid_file_array,
+                                                    valid_label_array,
+                                                    num_epochs=None,
+                                                    shape=IMAGE_SHAPE,
+                                                    batch_size=BATCH_SIZE,
+                                                    shuffle=True)
 
-    test_file_array, _ = \
-        generate_data_skeleton(root_dir=IMAGE_PATH + 'test',
-                               valid_size=None,
-                               ext=('.png', '.csv'))
-    # no shuffling or more than 1 epoch of test set, only through once.
-    test_image_batch = data_pipe(
-                            test_file_array,
-                            _,
-                            num_epochs=1,
-                            shape=IMAGE_SHAPE,
-                            batch_size=BATCH_SIZE,
-                            shuffle=False)[0]
+            init_op = tf.group(tf.local_variables_initializer(),
+                               tf.global_variables_initializer())
+            sess.run(init_op)
 
-    # only need to initiate data pipeline stored in local variable
-    sess.run(tf.local_variables_initializer())
+            train(MAX_STEPS, sess, x, y_, keep_prob, logits, train_image_batch,
+                  train_label_batch, valid_image_batch, valid_label_batch,
+                  train_step, accuracy, loss)
+            save_session(sess, path=MODEL_PATH, sav=saver)
 
-    with sess:
-        restore_session(sess, MODEL_PATH)
-        probs = predict(sess, x, keep_prob, logits, test_image_batch, TAGS)
-        submit(probs, IMAGE_PATH + 'test')
+        if EVAL:
+
+            test_file_array, _ = \
+                generate_data_skeleton(root_dir=IMAGE_PATH + 'test',
+                                       valid_size=None,
+                                       ext=('.png', '.csv'))
+            # no shuffling or more than 1 epoch of test set, only through once.
+            test_image_batch = data_pipe(
+                                    test_file_array,
+                                    _,
+                                    num_epochs=1,
+                                    shape=IMAGE_SHAPE,
+                                    batch_size=BATCH_SIZE,
+                                    shuffle=False)[0]
+
+            # only need to initiate data pipeline stored in local variable
+            sess.run(tf.local_variables_initializer())
+
+            restore_session(sess, MODEL_PATH)
+            probs = predict(sess, x, keep_prob, logits, test_image_batch)
+            ensemble_probs.append(probs)
+
+final_probs = np.mean(ensemble_probs, axis=0)
+submit(final_probs, IMAGE_PATH + 'test', TAGS)
 
 # delete session manually to prevent exit error.
 del sess
