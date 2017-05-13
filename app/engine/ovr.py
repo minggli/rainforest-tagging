@@ -20,85 +20,88 @@ from ..controllers import train, save_session, predict, restore_session, submit
 
 cnn = ConvolutionalNeuralNetwork(shape=IMAGE_SHAPE, num_classes=17)
 
-x, y_, keep_prob = cnn.x, cnn.y_, cnn.keep_prob
 
-conv_layer_1 = cnn.add_conv_layer(x, [[3, 3, IMAGE_SHAPE[-1], 6], [6]])
-conv_layer_2 = cnn.add_conv_layer(conv_layer_1, [[3, 3, 6, 6], [6]])
-max_pool_1 = cnn.add_pooling_layer(conv_layer_2)
-conv_layer_3 = cnn.add_conv_layer(max_pool_1, [[3, 3, 6, 12], [12]])
-conv_layer_4 = cnn.add_conv_layer(conv_layer_3, [[3, 3, 12, 12], [12]])
-max_pool_2 = cnn.add_pooling_layer(conv_layer_4)
-conv_layer_5 = cnn.add_conv_layer(max_pool_2, [[3, 3, 12, 24], [24]])
-conv_layer_6 = cnn.add_conv_layer(conv_layer_5, [[3, 3, 24, 24], [24]])
-conv_layer_7 = cnn.add_conv_layer(conv_layer_6, [[3, 3, 24, 24], [24]])
-max_pool_3 = cnn.add_pooling_layer(conv_layer_7)
-conv_layer_8 = cnn.add_conv_layer(max_pool_3, [[3, 3, 24, 48], [48]])
-conv_layer_9 = cnn.add_conv_layer(conv_layer_8, [[3, 3, 48, 48], [48]])
-conv_layer_10 = cnn.add_conv_layer(conv_layer_9, [[3, 3, 48, 48], [48]])
-max_pool_4 = cnn.add_pooling_layer(conv_layer_10)
-conv_layer_11 = cnn.add_conv_layer(max_pool_4, [[3, 3, 48, 48], [48]])
-conv_layer_12 = cnn.add_conv_layer(conv_layer_11, [[3, 3, 48, 48], [48]])
-conv_layer_13 = cnn.add_conv_layer(conv_layer_12, [[3, 3, 48, 48], [48]])
-max_pool_5 = cnn.add_pooling_layer(conv_layer_13)
-fc1 = cnn.add_dense_layer(max_pool_5, [[1 * 1 * 48, 2048], [2048]])
-# drop_out_layer_1 = cnn.add_drop_out_layer(fc1, keep_prob)
-fc2 = cnn.add_dense_layer(fc1, [[2048, 1024], [1024]])
-# drop_out_layer_2 = cnn.add_drop_out_layer(fc2, keep_prob)
-logits = cnn.add_read_out_layer(fc2)
-# [batch_size, 17] of logits (θ transpose X) for each of 17 classes
+def default_covnet(class_balance, l2_norm):
 
-# Tensorflow loss function API
-cross_entropy = tf.nn.sigmoid_cross_entropy_with_logits(logits=logits,
-                                                        labels=y_)
-# Explicit logistic loss function
-# cross_entropy = - (y_ * tf.log(1 / (1 + tf.exp(-logits)) + 1e-9) +
-#                    (1 - y_) * tf.log(1 - 1 / (1 + tf.exp(-logits)) + 1e-9))
-# [batch_size, 17] of logistic loss for each of 17 classes
+    global x, y_, keep_prob, logits, loss, train_step, accuracy, saver
 
-# applying label weights to loss function
-if True:
-    class_weights = tf.constant([[TAGS_WEIGHTINGS]], shape=[1, 17])
-    cross_entropy *= class_weights
+    x, y_, keep_prob = cnn.x, cnn.y_, cnn.keep_prob
 
-# add L2 regularization on weights from readout layer and dense layers
-if False:
-    weights2norm = [var for var in tf.trainable_variables()
-                    if var.name.startswith(('weight', 'bias'))][-4:]
-    regularizers = tf.add_n([tf.nn.l2_loss(var) for var in weights2norm])
-    cross_entropy += BETA * regularizers
+    conv_layer_1 = cnn.add_conv_layer(x, [[3, 3, IMAGE_SHAPE[-1], 6], [6]])
+    conv_layer_2 = cnn.add_conv_layer(conv_layer_1, [[3, 3, 6, 6], [6]])
+    max_pool_1 = cnn.add_pooling_layer(conv_layer_2)
+    conv_layer_3 = cnn.add_conv_layer(max_pool_1, [[3, 3, 6, 12], [12]])
+    conv_layer_4 = cnn.add_conv_layer(conv_layer_3, [[3, 3, 12, 12], [12]])
+    max_pool_2 = cnn.add_pooling_layer(conv_layer_4)
+    conv_layer_5 = cnn.add_conv_layer(max_pool_2, [[3, 3, 12, 24], [24]])
+    conv_layer_6 = cnn.add_conv_layer(conv_layer_5, [[3, 3, 24, 24], [24]])
+    conv_layer_7 = cnn.add_conv_layer(conv_layer_6, [[3, 3, 24, 24], [24]])
+    max_pool_3 = cnn.add_pooling_layer(conv_layer_7)
+    conv_layer_8 = cnn.add_conv_layer(max_pool_3, [[3, 3, 24, 48], [48]])
+    conv_layer_9 = cnn.add_conv_layer(conv_layer_8, [[3, 3, 48, 48], [48]])
+    conv_layer_10 = cnn.add_conv_layer(conv_layer_9, [[3, 3, 48, 48], [48]])
+    max_pool_4 = cnn.add_pooling_layer(conv_layer_10)
+    conv_layer_11 = cnn.add_conv_layer(max_pool_4, [[3, 3, 48, 48], [48]])
+    conv_layer_12 = cnn.add_conv_layer(conv_layer_11, [[3, 3, 48, 48], [48]])
+    conv_layer_13 = cnn.add_conv_layer(conv_layer_12, [[3, 3, 48, 48], [48]])
+    max_pool_5 = cnn.add_pooling_layer(conv_layer_13)
+    fc1 = cnn.add_dense_layer(max_pool_5, [[1 * 1 * 48, 2048], [2048]])
+    # drop_out_layer_1 = cnn.add_drop_out_layer(fc1, keep_prob)
+    fc2 = cnn.add_dense_layer(fc1, [[2048, 1024], [1024]])
+    # drop_out_layer_2 = cnn.add_drop_out_layer(fc2, keep_prob)
+    logits = cnn.add_read_out_layer(fc2)
+    # [batch_size, 17] of logits (θ transpose X) for each of 17 classes
 
-loss = tf.reduce_mean(cross_entropy)
+    # Tensorflow loss function API
+    cross_entropy = tf.nn.sigmoid_cross_entropy_with_logits(logits=logits,
+                                                            labels=y_)
+    # Explicit logistic loss function
+    # cross_entropy = - (y_ * tf.log(1 / (1 + tf.exp(-logits)) + 1e-9) +
+    #                 (1 - y_) * tf.log(1 - 1 / (1 + tf.exp(-logits)) + 1e-9))
+    # [batch_size, 17] of logistic loss for each of 17 classes
 
-# for var in tf.trainable_variables():
-#     print(var)
+    # applying label weights to loss function
+    if class_balance:
+        class_weights = tf.constant([[TAGS_WEIGHTINGS]], shape=[1, 17])
+        cross_entropy *= class_weights
 
-# Numerical Optimisation
-train_step = tf.train.RMSPropOptimizer(learning_rate=ALPHA,
-                                       decay=0.9,
-                                       momentum=.5,
-                                       epsilon=1e-10,
-                                       use_locking=False,
-                                       centered=False).minimize(loss)
+    # add L2 regularization on weights from readout layer and dense layers
+    if l2_norm:
+        weights2norm = [var for var in tf.trainable_variables()
+                        if var.name.startswith(('weight', 'bias'))][-4:]
+        regularizers = tf.add_n([tf.nn.l2_loss(var) for var in weights2norm])
+        cross_entropy += BETA * regularizers
 
-# eval
-correct_prediction = tf.equal(tf.round(tf.nn.sigmoid(logits)), y_)
-# accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
-all_correct_pred = tf.reduce_min(tf.cast(correct_prediction, tf.float32), 1)
-accuracy = tf.reduce_mean(all_correct_pred)
+    loss = tf.reduce_mean(cross_entropy)
 
-# saver
-saver = tf.train.Saver(max_to_keep=5, var_list=tf.trainable_variables())
+    # for var in tf.trainable_variables():
+    #     print(var)
 
-# session
-sess = tf.Session()
+    # Numerical Optimisation
+    train_step = tf.train.RMSPropOptimizer(learning_rate=ALPHA,
+                                           decay=0.9,
+                                           momentum=.5,
+                                           epsilon=1e-10,
+                                           use_locking=False,
+                                           centered=False).minimize(loss)
+
+    # eval
+    correct_pred = tf.equal(tf.round(tf.nn.sigmoid(logits)), y_)
+    # accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
+    all_correct_pred = tf.reduce_min(tf.cast(correct_pred, tf.float32), 1)
+    accuracy = tf.reduce_mean(all_correct_pred)
+
+    # saver
+    saver = tf.train.Saver(max_to_keep=5, var_list=tf.trainable_variables())
+
+
 ensemble_probs = list()
 
 for iteration in range(ENSEMBLE):
-
-    with sess.as_default():
-
+    tf.reset_default_graph()
+    default_covnet(class_balance=True, l2_norm=False)
+    with tf.Session() as sess:
         if TRAIN:
-
             train_file_array, train_label_array, valid_file_array,\
                 valid_label_array = generate_data_skeleton(
                                                root_dir=IMAGE_PATH + 'train',
@@ -119,8 +122,8 @@ for iteration in range(ENSEMBLE):
                                                     batch_size=BATCH_SIZE,
                                                     shuffle=True)
 
-            init_op = tf.group(tf.local_variables_initializer(),
-                               tf.global_variables_initializer())
+            init_op = tf.group(tf.global_variables_initializer(),
+                               tf.local_variables_initializer())
             sess.run(init_op)
 
             train(MAX_STEPS, sess, x, y_, keep_prob, logits, train_image_batch,
@@ -129,7 +132,6 @@ for iteration in range(ENSEMBLE):
             save_session(sess, path=MODEL_PATH, sav=saver)
 
         if EVAL:
-
             test_file_array, _ = \
                 generate_data_skeleton(root_dir=IMAGE_PATH + 'test',
                                        valid_size=None,
@@ -150,7 +152,9 @@ for iteration in range(ENSEMBLE):
             probs = predict(sess, x, keep_prob, logits, test_image_batch)
             ensemble_probs.append(probs)
 
+
 final_probs = np.mean(ensemble_probs, axis=0)
+print(final_probs)
 submit(final_probs, IMAGE_PATH + 'test', TAGS)
 
 # delete session manually to prevent exit error.
