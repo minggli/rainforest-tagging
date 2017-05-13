@@ -127,6 +127,7 @@ def decode_transform(input_queue,
     # input_queue allows slicing with 0: path_to_image, 1: encoded label
     label_queue = input_queue[1]
     image_queue = tf.read_file(input_queue[0])
+    # decode_jpeg only accepts RGB jpg and not raising error for CMYK
     original_img = tf.image.decode_jpeg(image_queue, channels=shape[2])
 
     # crop larger images to 256*256, this func doesn't 'resize'.

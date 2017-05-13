@@ -24,7 +24,7 @@ for key in fs:
         path_to_images.append(os.path.join(key, filename))
 
 for path_to_image in path_to_images:
-    img = Image.open(path_to_image)
-    if img.mode == 'CMYK':
-        print('converting from CMYK to RGB: {0}'.format(path_to_image))
-        img.convert('RGB').save(path_to_image, 'JPEG')
+    with Image.open(path_to_image) as img:
+        if img.mode == 'CMYK':
+            print('converting from CMYK to RGB: {0}'.format(path_to_image))
+            img.convert('RGB').save(path_to_image, 'JPEG')

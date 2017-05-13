@@ -43,7 +43,7 @@ def test_queue():
 with sess:
     total = test_queue()
     n = int(input('choose a image to test'))
-    print(total[n].mean())
-    Image.fromarray(np.array(total[n], dtype=np.uint8)).show()
-    Image.fromarray(np.array(total[n+BATCH_SIZE], dtype=np.uint8)).show()
-    Image.fromarray(np.array(total[n+2*BATCH_SIZE], dtype=np.uint8)).show()
+    print(total[n])
+    Image.fromarray(np.array(total[n])).show()
+    Image.fromarray(np.array(total[n+BATCH_SIZE])).show()
+    Image.fromarray(np.array(total[n+2*BATCH_SIZE])).show()

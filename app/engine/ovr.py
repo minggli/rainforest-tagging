@@ -29,23 +29,23 @@ max_pool_1 = cnn.add_pooling_layer(conv_layer_2)
 conv_layer_3 = cnn.add_conv_layer(max_pool_1, [[3, 3, 6, 12], [12]])
 conv_layer_4 = cnn.add_conv_layer(conv_layer_3, [[3, 3, 12, 12], [12]])
 max_pool_2 = cnn.add_pooling_layer(conv_layer_4)
-conv_layer_5 = cnn.add_conv_layer(max_pool_2, [[3, 3, 12, 18], [18]])
-conv_layer_6 = cnn.add_conv_layer(conv_layer_5, [[3, 3, 18, 18], [18]])
-conv_layer_7 = cnn.add_conv_layer(conv_layer_6, [[3, 3, 18, 18], [18]])
+conv_layer_5 = cnn.add_conv_layer(max_pool_2, [[3, 3, 12, 24], [24]])
+conv_layer_6 = cnn.add_conv_layer(conv_layer_5, [[3, 3, 24, 24], [24]])
+conv_layer_7 = cnn.add_conv_layer(conv_layer_6, [[3, 3, 24, 24], [24]])
 max_pool_3 = cnn.add_pooling_layer(conv_layer_7)
-conv_layer_8 = cnn.add_conv_layer(max_pool_3, [[3, 3, 18, 24], [24]])
-conv_layer_9 = cnn.add_conv_layer(conv_layer_8, [[3, 3, 24, 24], [24]])
-conv_layer_10 = cnn.add_conv_layer(conv_layer_9, [[3, 3, 24, 24], [24]])
+conv_layer_8 = cnn.add_conv_layer(max_pool_3, [[3, 3, 24, 48], [48]])
+conv_layer_9 = cnn.add_conv_layer(conv_layer_8, [[3, 3, 48, 48], [48]])
+conv_layer_10 = cnn.add_conv_layer(conv_layer_9, [[3, 3, 48, 48], [48]])
 max_pool_4 = cnn.add_pooling_layer(conv_layer_10)
-conv_layer_11 = cnn.add_conv_layer(max_pool_4, [[3, 3, 24, 24], [24]])
-conv_layer_12 = cnn.add_conv_layer(conv_layer_11, [[3, 3, 24, 24], [24]])
-conv_layer_13 = cnn.add_conv_layer(conv_layer_12, [[3, 3, 24, 24], [24]])
+conv_layer_11 = cnn.add_conv_layer(max_pool_4, [[3, 3, 48, 48], [48]])
+conv_layer_12 = cnn.add_conv_layer(conv_layer_11, [[3, 3, 48, 48], [48]])
+conv_layer_13 = cnn.add_conv_layer(conv_layer_12, [[3, 3, 48, 48], [48]])
 max_pool_5 = cnn.add_pooling_layer(conv_layer_13)
-fc1 = cnn.add_dense_layer(max_pool_5, [[1 * 1 * 24, 256], [256]])
-drop_out_layer_1 = cnn.add_drop_out_layer(fc1, keep_prob)
-fc2 = cnn.add_dense_layer(drop_out_layer_1, [[256, 128], [128]])
-drop_out_layer_2 = cnn.add_drop_out_layer(fc2, keep_prob)
-logits = cnn.add_read_out_layer(drop_out_layer_2)
+fc1 = cnn.add_dense_layer(max_pool_5, [[2 * 2 * 48, 2048], [2048]])
+# drop_out_layer_1 = cnn.add_drop_out_layer(fc1, keep_prob)
+fc2 = cnn.add_dense_layer(fc1, [[2048, 1024], [1024]])
+# drop_out_layer_2 = cnn.add_drop_out_layer(fc2, keep_prob)
+logits = cnn.add_read_out_layer(fc2)
 # [batch_size, 17] of logits (θ transpose X) for each of 17 classes
 
 # Tensorflow loss function API
@@ -64,7 +64,7 @@ if True:
 # add L2 regularization on weights from readout layer and dense layers
 if True:
     weights2norm = [var for var in tf.trainable_variables()
-                    if var.name.startswith(('weight', 'bias'))][-10:]
+                    if var.name.startswith(('weight', 'bias'))][-6:]
     regularizers = tf.add_n([tf.nn.l2_loss(var) for var in weights2norm])
     cross_entropy += BETA * regularizers
 
@@ -83,7 +83,9 @@ train_step = tf.train.RMSPropOptimizer(learning_rate=ALPHA,
 
 # eval
 correct_prediction = tf.equal(tf.round(tf.nn.sigmoid(logits)), y_)
-accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
+# accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
+all_correct_pred = tf.reduce_min(tf.cast(correct_prediction, tf.float32), 1)
+accuracy = tf.reduce_mean(all_correct_pred)
 
 # saver
 saver = tf.train.Saver(max_to_keep=5, var_list=tf.trainable_variables())
