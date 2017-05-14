@@ -33,15 +33,22 @@ def timeit(func):
 @multithreading
 def train(n, sess, x, y_, keep_prob, logits, train_image_batch,
           train_label_batch, valid_image_batch, valid_label_batch, optimiser,
-          metric, loss):
+          metric, loss, thresholds):
     """train neural network and produce accuracies with validation set."""
 
     for global_step in range(n):
         train_image, train_label = \
                             sess.run([train_image_batch, train_label_batch])
-        optimiser.run(feed_dict={
-                            x: train_image, y_: train_label, keep_prob: .5})
-        print(global_step, train_label[0])
+        _, train_accuracy, train_loss, y_pred = sess.run(
+                fetches=[optimiser, metric, loss, tf.nn.sigmoid(logits)],
+                feed_dict={x: train_image, y_: train_label, keep_prob: .5})
+        f2_score = metrics.fbeta_score(y_true=train_label,
+                                       y_pred=y_pred > thresholds,
+                                       beta=2,
+                                       average='samples')
+        print("step {0} of {3}, train accuracy: {1:.4f}, F2 score: {4:.4f}"
+              " log loss: {2:.4f}".format(global_step, train_accuracy,
+                                          train_loss, n, f2_score))
 
         if global_step and global_step % 50 == 0:
             valid_image, valid_label = \
@@ -51,7 +58,7 @@ def train(n, sess, x, y_, keep_prob, logits, train_image_batch,
                 feed_dict={x: valid_image, y_: valid_label, keep_prob: 1.0})
             # beta score as specified in competition with beta = 2
             f2_score = metrics.fbeta_score(y_true=valid_label,
-                                           y_pred=y_pred > .5,
+                                           y_pred=y_pred > thresholds,
                                            beta=2,
                                            average='samples')
             print("step {0} of {3}, valid accuracy: {1:.4f}, F2 score: {4:.4f}"
@@ -79,17 +86,18 @@ def predict(sess, x, keep_prob, logits, test_image_batch):
 
 
 @timeit
-def submit(predicted_input, path, tags):
+def submit(predicted_input, path, tags, thresholds):
     """"produce an output file with predicted probabilities."""
-    predicted_input = [' '.join(np.array(tags)[array.nonzero()])
-                       for array in np.around(predicted_input)]
+    predictions = predicted_input > thresholds
+    tags_predictions = [' '.join(np.array(tags)[boolean_array])
+                        for boolean_array in predictions]
     now = datetime.now().strftime('%Y%m%d%H%M%S')
     template = pd.read_csv(
                 filepath_or_buffer=path + '/sample_submission.csv',
                 encoding='utf8',
                 index_col=0)
     df = pd.DataFrame(
-                data=predicted_input,
+                data=tags_predictions,
                 columns=template.columns,
                 index=template.index)
     df.to_csv(

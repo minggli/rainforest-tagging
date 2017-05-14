@@ -14,7 +14,8 @@ import numpy as np
 from ..main import EVAL, TRAIN, ENSEMBLE
 from ..models.cnn import ConvolutionalNeuralNetwork
 from ..settings import (IMAGE_PATH, IMAGE_SHAPE, BATCH_SIZE, MODEL_PATH,
-                        MAX_STEPS, ALPHA, BETA, TAGS, TAGS_WEIGHTINGS)
+                        MAX_STEPS, ALPHA, BETA, TAGS, TAGS_WEIGHTINGS,
+                        TAGS_THRESHOLDS)
 from ..pipeline import data_pipe, generate_data_skeleton
 from ..controllers import train, save_session, predict, restore_session, submit
 
@@ -55,8 +56,8 @@ def vgg_16(class_balance, l2_norm):
     cross_entropy = tf.nn.sigmoid_cross_entropy_with_logits(logits=logits,
                                                             labels=y_)
     # Explicit logistic loss function
-    # cross_entropy = - (y_ * tf.log(1 / (1 + tf.exp(-logits)) + 1e-9) +
-    #                 (1 - y_) * tf.log(1 - 1 / (1 + tf.exp(-logits)) + 1e-9))
+    # cross_entropy = - (y_ * tf.log(1 / (1 + tf.exp(-logits)) + 1e-9) * .75 +
+    #                  (1 - y_) * tf.log(1 - 1 / (1 + tf.exp(-logits)) + 1e-9))
     # [batch_size, 17] of logistic loss for each of 17 classes
 
     # applying label weights to loss function
@@ -96,7 +97,7 @@ ensemble_probs = list()
 
 for iteration in range(ENSEMBLE):
     tf.reset_default_graph()
-    vgg_16(class_balance=True, l2_norm=False)
+    vgg_16(class_balance=False, l2_norm=False)
 
     if TRAIN:
         with tf.Session() as sess:
@@ -126,7 +127,7 @@ for iteration in range(ENSEMBLE):
 
             train(MAX_STEPS, sess, x, y_, keep_prob, logits, train_image_batch,
                   train_label_batch, valid_image_batch, valid_label_batch,
-                  train_step, accuracy, loss)
+                  train_step, accuracy, loss, TAGS_THRESHOLDS)
             save_session(sess, path=MODEL_PATH, sav=saver)
 
     if EVAL:
@@ -154,7 +155,7 @@ for iteration in range(ENSEMBLE):
 
 if EVAL:
     final_probs = np.mean(ensemble_probs, axis=0)
-    submit(final_probs, IMAGE_PATH + 'test', TAGS)
+    submit(final_probs, IMAGE_PATH + 'test', TAGS, TAGS_THRESHOLDS)
 
 # delete session manually to prevent exit error.
 del sess
