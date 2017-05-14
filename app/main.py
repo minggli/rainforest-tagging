@@ -10,7 +10,7 @@ TRAIN = True if 'TRAIN' in map(str.upper, sys.argv[1:]) else False
 EVAL = True if 'EVAL' in map(str.upper, sys.argv[1:]) else False
 
 if 'ENSEMBLE' in map(str.upper, sys.argv[1:]):
-    ENSEMBLE = 5
+    ENSEMBLE = 3
     TRAIN = EVAL = True
 else:
     ENSEMBLE = 1

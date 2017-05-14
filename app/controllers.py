@@ -73,8 +73,8 @@ def predict(sess, x, keep_prob, logits, test_image_batch):
         except tf.errors.OutOfRangeError as e:
             # pipe exhausted with pre-determined number of epochs i.e. 1
             break
-    unravelled_array = [array for nested_arrays in complete_pred
-                        for array in nested_arrays]
+    unravelled_array = np.array([array for nested_arrays in complete_pred
+                                for array in nested_arrays])
     return unravelled_array
 
 
