@@ -3,7 +3,7 @@
 ovr
 
 One-versus-Rest approach for multi-label classification, predicting each label
-independently after CNN (VGG-16)
+independently using Convolutional Neural Network similar architecture to VGG-16
 
 VERY DEEP CONVOLUTIONAL NETWORKS FOR LARGE-SCALE IMAGE RECOGNITION
 Simonyan K. & Zisserman A. (2015)
@@ -33,21 +33,21 @@ def vgg_16(class_balance, l2_norm):
     conv_layer_3 = cnn.add_conv_layer(max_pool_1, [[3, 3, 6, 12], [12]])
     conv_layer_4 = cnn.add_conv_layer(conv_layer_3, [[3, 3, 12, 12], [12]])
     max_pool_2 = cnn.add_pooling_layer(conv_layer_4)
-    conv_layer_5 = cnn.add_conv_layer(max_pool_2, [[3, 3, 12, 24], [24]])
-    conv_layer_6 = cnn.add_conv_layer(conv_layer_5, [[3, 3, 24, 24], [24]])
-    conv_layer_7 = cnn.add_conv_layer(conv_layer_6, [[3, 3, 24, 24], [24]])
+    conv_layer_5 = cnn.add_conv_layer(max_pool_2, [[2, 2, 12, 24], [24]])
+    conv_layer_6 = cnn.add_conv_layer(conv_layer_5, [[2, 2, 24, 24], [24]])
+    conv_layer_7 = cnn.add_conv_layer(conv_layer_6, [[2, 2, 24, 24], [24]])
     max_pool_3 = cnn.add_pooling_layer(conv_layer_7)
-    conv_layer_8 = cnn.add_conv_layer(max_pool_3, [[3, 3, 24, 48], [48]])
-    conv_layer_9 = cnn.add_conv_layer(conv_layer_8, [[3, 3, 48, 48], [48]])
-    conv_layer_10 = cnn.add_conv_layer(conv_layer_9, [[3, 3, 48, 48], [48]])
+    conv_layer_8 = cnn.add_conv_layer(max_pool_3, [[2, 2, 24, 36], [36]])
+    conv_layer_9 = cnn.add_conv_layer(conv_layer_8, [[2, 2, 36, 36], [36]])
+    conv_layer_10 = cnn.add_conv_layer(conv_layer_9, [[2, 2, 36, 36], [36]])
     max_pool_4 = cnn.add_pooling_layer(conv_layer_10)
-    conv_layer_11 = cnn.add_conv_layer(max_pool_4, [[3, 3, 48, 48], [48]])
-    conv_layer_12 = cnn.add_conv_layer(conv_layer_11, [[3, 3, 48, 48], [48]])
-    conv_layer_13 = cnn.add_conv_layer(conv_layer_12, [[3, 3, 48, 48], [48]])
+    conv_layer_11 = cnn.add_conv_layer(max_pool_4, [[2, 2, 36, 36], [36]])
+    conv_layer_12 = cnn.add_conv_layer(conv_layer_11, [[2, 2, 36, 36], [36]])
+    conv_layer_13 = cnn.add_conv_layer(conv_layer_12, [[2, 2, 36, 36], [36]])
     max_pool_5 = cnn.add_pooling_layer(conv_layer_13)
-    fc1 = cnn.add_dense_layer(max_pool_5, [[1 * 1 * 48, 2048], [2048]])
+    fc1 = cnn.add_dense_layer(max_pool_5, [[1 * 1 * 36, 256], [256]])
     # drop_out_layer_1 = cnn.add_drop_out_layer(fc1, keep_prob)
-    fc2 = cnn.add_dense_layer(fc1, [[2048, 1024], [1024]])
+    fc2 = cnn.add_dense_layer(fc1, [[256, 128], [128]])
     # drop_out_layer_2 = cnn.add_drop_out_layer(fc2, keep_prob)
     logits = cnn.add_read_out_layer(fc2)
     # [batch_size, 17] of logits (θ transpose X) for each of 17 classes
@@ -55,10 +55,11 @@ def vgg_16(class_balance, l2_norm):
     # Tensorflow loss function API
     cross_entropy = tf.nn.sigmoid_cross_entropy_with_logits(logits=logits,
                                                             labels=y_)
-    # Explicit logistic loss function
-    # cross_entropy = - (y_ * tf.log(1 / (1 + tf.exp(-logits)) + 1e-9) * .75 +
-    #                  (1 - y_) * tf.log(1 - 1 / (1 + tf.exp(-logits)) + 1e-9))
     # [batch_size, 17] of logistic loss for each of 17 classes
+
+    # Explicit logistic loss function
+    # cross_entropy = - (y_ * tf.log(1 / (1 + tf.exp(-logits)) + 1e-9) +
+    #                  (1 - y_) * tf.log(1 - 1 / (1 + tf.exp(-logits)) + 1e-9))
 
     # applying label weights to loss function
     if class_balance:
@@ -84,7 +85,9 @@ def vgg_16(class_balance, l2_norm):
                                            centered=False).minimize(loss)
 
     # eval
-    correct_pred = tf.equal(tf.round(tf.nn.sigmoid(logits)), y_)
+    correct_pred = tf.equal(
+                   tf.cast(tf.nn.sigmoid(logits) > TAGS_THRESHOLDS, tf.int8),
+                   tf.cast(y_, tf.int8))
     # accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
     all_correct_pred = tf.reduce_min(tf.cast(correct_pred, tf.float32), 1)
     accuracy = tf.reduce_mean(all_correct_pred)
@@ -149,7 +152,6 @@ for iteration in range(ENSEMBLE):
 
             restore_session(sess, MODEL_PATH)
             probs = predict(sess, x, keep_prob, logits, test_image_batch)
-            print(probs.shape)
             ensemble_probs.append(probs)
 
 

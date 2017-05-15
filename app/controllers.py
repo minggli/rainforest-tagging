@@ -41,7 +41,7 @@ def train(n, sess, x, y_, keep_prob, logits, train_image_batch,
                             sess.run([train_image_batch, train_label_batch])
         _, train_accuracy, train_loss, y_pred = sess.run(
                 fetches=[optimiser, metric, loss, tf.nn.sigmoid(logits)],
-                feed_dict={x: train_image, y_: train_label, keep_prob: .5})
+                feed_dict={x: train_image, y_: train_label, keep_prob: .75})
         f2_score = metrics.fbeta_score(y_true=train_label,
                                        y_pred=y_pred > thresholds,
                                        beta=2,
