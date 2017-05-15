@@ -5,7 +5,8 @@ MODEL_PATH = './trained_models/'
 IMAGE_PATH = './data/'
 IMAGE_SHAPE = (32, 32, 4)
 BATCH_SIZE = 64
-MAX_STEPS = 3000
+# roughly 10 epochs of training data
+MAX_STEPS = 5000
 ALPHA = 1e-3
 BETA = 1e-2
 
