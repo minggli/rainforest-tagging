@@ -31,7 +31,7 @@ def timeit(func):
 
 @timeit
 @multithreading
-def train(n, sess, x, y_, keep_prob, logits, train_image_batch,
+def train(n, sess, x, y_, keep_prob, is_train, logits, train_image_batch,
           train_label_batch, valid_image_batch, valid_label_batch, optimiser,
           metric, loss, thresholds):
     """train neural network and produce accuracies with validation set."""
@@ -41,7 +41,8 @@ def train(n, sess, x, y_, keep_prob, logits, train_image_batch,
                             sess.run([train_image_batch, train_label_batch])
         _, train_accuracy, train_loss, y_pred = sess.run(
                 fetches=[optimiser, metric, loss, tf.nn.sigmoid(logits)],
-                feed_dict={x: train_image, y_: train_label, keep_prob: .75})
+                feed_dict={x: train_image, y_: train_label, keep_prob: .75,
+                           is_train: True})
         f2_score = metrics.fbeta_score(y_true=train_label,
                                        y_pred=y_pred > thresholds,
                                        beta=2,
@@ -55,7 +56,8 @@ def train(n, sess, x, y_, keep_prob, logits, train_image_batch,
                 sess.run(fetches=[valid_image_batch, valid_label_batch])
             valid_accuracy, loss_score, y_pred = sess.run(
                 fetches=[metric, loss, tf.nn.sigmoid(logits)],
-                feed_dict={x: valid_image, y_: valid_label, keep_prob: 1.0})
+                feed_dict={x: valid_image, y_: valid_label, keep_prob: 1.0,
+                           is_train: False})
             # beta score as specified in competition with beta = 2
             f2_score = metrics.fbeta_score(y_true=valid_label,
                                            y_pred=y_pred > thresholds,
@@ -68,14 +70,15 @@ def train(n, sess, x, y_, keep_prob, logits, train_image_batch,
 
 @timeit
 @multithreading
-def predict(sess, x, keep_prob, logits, test_image_batch):
+def predict(sess, x, keep_prob, is_train, logits, test_image_batch):
     """predict test set using graph previously trained and saved."""
     complete_pred = list()
     while 1:
         try:
             test_image = sess.run(test_image_batch)
             batch_pred = sess.run(tf.nn.sigmoid(logits),
-                                  feed_dict={x: test_image, keep_prob: 1.0})
+                                  feed_dict={x: test_image, keep_prob: 1.0,
+                                             is_train: False})
             complete_pred.append(batch_pred)
         except tf.errors.OutOfRangeError as e:
             # pipe exhausted with pre-determined number of epochs i.e. 1
