@@ -105,39 +105,15 @@ class ConvolutionalNeuralNetwork:
         return self.nonlinearity(func)(tf.matmul(reshaped_x, W) + b)
 
     def add_batch_norm_layer(self, input_layer, is_train):
-        """batch normalization layer, tomokishii's implementation."""
-        input_layer_n = input_layer.get_shape()[-1]
-        with tf.variable_scope('batch_norm'):
-            beta = tf.Variable(tf.constant(0.0, shape=[input_layer_n]),
-                               name='bn_beta',
-                               trainable=True)
-            gamma = tf.Variable(tf.constant(1.0, shape=[input_layer_n]),
-                                name='bn_gamma',
-                                trainable=True)
-            batch_mean, batch_var = tf.nn.moments(x=input_layer,
-                                                  axes=[0, 1, 2],
-                                                  name='moments')
-            ema = tf.train.ExponentialMovingAverage(decay=0.5)
-
-            def mean_var_with_update():
-                """apply exponential moving average ops before returning mean
-                and variance."""
-                ema_apply_op = ema.apply([batch_mean, batch_var])
-                with tf.control_dependencies([ema_apply_op]):
-                    return tf.identity(batch_mean), tf.identity(batch_var)
-
-            mean, var = tf.cond(pred=is_train,
-                                fn1=mean_var_with_update,
-                                fn2=lambda: (ema.average(batch_mean),
-                                             ema.average(batch_var)))
-
-        return tf.nn.batch_normalization(x=input_layer,
-                                         mean=mean,
-                                         variance=var,
-                                         offset=beta,
-                                         scale=gamma,
-                                         variance_epsilon=1e-3,
-                                         name='batch_normalization')
+        """batch normalization layer"""
+        reuse = True if is_train is False else None
+        return tf.contrib.layers.batch_norm(inputs=input_layer,
+                                            decay=0.99,
+                                            epsilon=1e-3,
+                                            center=True,
+                                            scale=True,
+                                            is_training=is_train,
+                                            reuse=reuse)
 
     def add_drop_out_layer(self, input_layer, keep_prob):
         """drop out layer to reduce overfitting"""

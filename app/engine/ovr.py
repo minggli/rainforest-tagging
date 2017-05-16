@@ -79,15 +79,20 @@ def vgg_16(class_balance, l2_norm):
         regularizers = tf.add_n([tf.nn.l2_loss(var) for var in weights2norm])
         cross_entropy += BETA * regularizers
 
+    for n in tf.trainable_variables():
+        print(n)
+
     loss = tf.reduce_mean(cross_entropy)
 
-    # Numerical Optimisation
-    train_step = tf.train.RMSPropOptimizer(learning_rate=ALPHA,
-                                           decay=0.9,
-                                           momentum=.5,
-                                           epsilon=1e-10,
-                                           use_locking=False,
-                                           centered=False).minimize(loss)
+    update_batch_norm_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
+    with tf.control_dependencies(update_batch_norm_ops):
+        # Numerical Optimisation only ran after updating moving avg and var
+        train_step = tf.train.RMSPropOptimizer(learning_rate=ALPHA,
+                                               decay=0.9,
+                                               momentum=.5,
+                                               epsilon=1e-10,
+                                               use_locking=False,
+                                               centered=False).minimize(loss)
 
     # eval
     correct_pred = tf.equal(
@@ -154,7 +159,9 @@ for iteration in range(ENSEMBLE):
                                                 batch_size=BATCH_SIZE,
                                                 shuffle=False)
 
-            sess.run(tf.local_variables_initializer())
+            init_op = tf.group(tf.local_variables_initializer(),
+                               tf.global_variables_initializer())
+            sess.run(init_op)
 
             restore_session(sess, MODEL_PATH)
             probs = predict(sess, x, keep_prob, is_train, logits,
