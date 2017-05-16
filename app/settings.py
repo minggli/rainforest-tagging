@@ -3,7 +3,7 @@
 # Convolutional Neural Network
 MODEL_PATH = './trained_models/'
 IMAGE_PATH = './data/'
-IMAGE_SHAPE = (32, 32, 4)
+IMAGE_SHAPE = (128, 128, 4)
 BATCH_SIZE = 64
 # roughly 10 epochs of training data
 MAX_STEPS = 5000

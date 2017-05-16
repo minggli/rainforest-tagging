@@ -33,26 +33,26 @@ def vgg_16(class_balance, l2_norm):
     conv_layer_3 = cnn.add_conv_layer(max_pool_1, [[3, 3, 6, 12], [12]])
     conv_layer_4 = cnn.add_conv_layer(conv_layer_3, [[3, 3, 12, 12], [12]])
     max_pool_2 = cnn.add_pooling_layer(conv_layer_4)
-    conv_layer_5 = cnn.add_conv_layer(max_pool_2, [[2, 2, 12, 24], [24]])
-    conv_layer_6 = cnn.add_conv_layer(conv_layer_5, [[2, 2, 24, 24], [24]])
-    conv_layer_7 = cnn.add_conv_layer(conv_layer_6, [[2, 2, 24, 24], [24]])
+    conv_layer_5 = cnn.add_conv_layer(max_pool_2, [[3, 3, 12, 24], [24]])
+    conv_layer_6 = cnn.add_conv_layer(conv_layer_5, [[3, 3, 24, 24], [24]])
+    conv_layer_7 = cnn.add_conv_layer(conv_layer_6, [[3, 3, 24, 24], [24]])
     max_pool_3 = cnn.add_pooling_layer(conv_layer_7)
-    conv_layer_8 = cnn.add_conv_layer(max_pool_3, [[2, 2, 24, 36], [36]])
-    conv_layer_9 = cnn.add_conv_layer(conv_layer_8, [[2, 2, 36, 36], [36]])
-    conv_layer_10 = cnn.add_conv_layer(conv_layer_9, [[2, 2, 36, 36], [36]])
+    conv_layer_8 = cnn.add_conv_layer(max_pool_3, [[3, 3, 24, 48], [48]])
+    conv_layer_9 = cnn.add_conv_layer(conv_layer_8, [[3, 3, 48, 48], [48]])
+    conv_layer_10 = cnn.add_conv_layer(conv_layer_9, [[3, 3, 48, 48], [48]])
     max_pool_4 = cnn.add_pooling_layer(conv_layer_10)
-    conv_layer_11 = cnn.add_conv_layer(max_pool_4, [[2, 2, 36, 36], [36]])
-    conv_layer_12 = cnn.add_conv_layer(conv_layer_11, [[2, 2, 36, 36], [36]])
-    conv_layer_13 = cnn.add_conv_layer(conv_layer_12, [[2, 2, 36, 36], [36]])
+    conv_layer_11 = cnn.add_conv_layer(max_pool_4, [[3, 3, 48, 48], [48]])
+    conv_layer_12 = cnn.add_conv_layer(conv_layer_11, [[3, 3, 48, 48], [48]])
+    conv_layer_13 = cnn.add_conv_layer(conv_layer_12, [[3, 3, 48, 48], [48]])
     max_pool_5 = cnn.add_pooling_layer(conv_layer_13)
-    fc1 = cnn.add_dense_layer(max_pool_5, [[1 * 1 * 36, 256], [256]])
+    fc1 = cnn.add_dense_layer(max_pool_5, [[4 * 4 * 48, 256], [256]])
     # drop_out_layer_1 = cnn.add_drop_out_layer(fc1, keep_prob)
-    fc2 = cnn.add_dense_layer(fc1, [[256, 128], [128]])
+    fc2 = cnn.add_dense_layer(fc1, [[256, 64], [64]])
     # drop_out_layer_2 = cnn.add_drop_out_layer(fc2, keep_prob)
     logits = cnn.add_read_out_layer(fc2)
     # [batch_size, 17] of logits (θ transpose X) for each of 17 classes
 
-    # Tensorflow loss function API
+    # Tensorflow cross_entropy loss API
     cross_entropy = tf.nn.sigmoid_cross_entropy_with_logits(logits=logits,
                                                             labels=y_)
     # [batch_size, 17] of logistic loss for each of 17 classes
@@ -107,7 +107,7 @@ for iteration in range(ENSEMBLE):
             train_file_array, train_label_array, valid_file_array,\
                 valid_label_array = generate_data_skeleton(
                                                 root_dir=IMAGE_PATH + 'train',
-                                                valid_size=.15,
+                                                valid_size=.20,
                                                 ext=('.png', '.csv'))
             train_image_batch, train_label_batch = data_pipe(
                                                 train_file_array,
