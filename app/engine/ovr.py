@@ -22,10 +22,11 @@ from ..controllers import train, save_session, predict, restore_session, submit
 
 def vgg_16(class_balance, l2_norm):
 
-    global x, y_, keep_prob, logits, loss, train_step, accuracy, saver
+    global x, y_, keep_prob, is_train, logits, loss, train_step, accuracy, \
+           saver
 
     cnn = ConvolutionalNeuralNetwork(shape=IMAGE_SHAPE, num_classes=17)
-    x, y_, keep_prob = cnn.x, cnn.y_, cnn.keep_prob
+    x, y_, keep_prob, is_train = cnn.x, cnn.y_, cnn.keep_prob, cnn.is_train
 
     conv_layer_1 = cnn.add_conv_layer(x, [[3, 3, IMAGE_SHAPE[-1], 6], [6]])
     conv_layer_2 = cnn.add_conv_layer(conv_layer_1, [[3, 3, 6, 6], [6]])
@@ -33,19 +34,23 @@ def vgg_16(class_balance, l2_norm):
     conv_layer_3 = cnn.add_conv_layer(max_pool_1, [[3, 3, 6, 12], [12]])
     conv_layer_4 = cnn.add_conv_layer(conv_layer_3, [[3, 3, 12, 12], [12]])
     max_pool_2 = cnn.add_pooling_layer(conv_layer_4)
-    conv_layer_5 = cnn.add_conv_layer(max_pool_2, [[3, 3, 12, 24], [24]])
+    batch_norm_1 = cnn.add_batch_norm_layer(max_pool_2, is_train)
+    conv_layer_5 = cnn.add_conv_layer(batch_norm_1, [[3, 3, 12, 24], [24]])
     conv_layer_6 = cnn.add_conv_layer(conv_layer_5, [[3, 3, 24, 24], [24]])
     conv_layer_7 = cnn.add_conv_layer(conv_layer_6, [[3, 3, 24, 24], [24]])
     max_pool_3 = cnn.add_pooling_layer(conv_layer_7)
-    conv_layer_8 = cnn.add_conv_layer(max_pool_3, [[3, 3, 24, 48], [48]])
+    batch_norm_2 = cnn.add_batch_norm_layer(max_pool_3, is_train)
+    conv_layer_8 = cnn.add_conv_layer(batch_norm_2, [[3, 3, 24, 48], [48]])
     conv_layer_9 = cnn.add_conv_layer(conv_layer_8, [[3, 3, 48, 48], [48]])
     conv_layer_10 = cnn.add_conv_layer(conv_layer_9, [[3, 3, 48, 48], [48]])
     max_pool_4 = cnn.add_pooling_layer(conv_layer_10)
-    conv_layer_11 = cnn.add_conv_layer(max_pool_4, [[3, 3, 48, 48], [48]])
+    batch_norm_3 = cnn.add_batch_norm_layer(max_pool_4, is_train)
+    conv_layer_11 = cnn.add_conv_layer(batch_norm_3, [[3, 3, 48, 48], [48]])
     conv_layer_12 = cnn.add_conv_layer(conv_layer_11, [[3, 3, 48, 48], [48]])
     conv_layer_13 = cnn.add_conv_layer(conv_layer_12, [[3, 3, 48, 48], [48]])
     max_pool_5 = cnn.add_pooling_layer(conv_layer_13)
-    fc1 = cnn.add_dense_layer(max_pool_5, [[4 * 4 * 48, 256], [256]])
+    batch_norm_4 = cnn.add_batch_norm_layer(max_pool_5, is_train)
+    fc1 = cnn.add_dense_layer(batch_norm_4, [[4 * 4 * 48, 256], [256]])
     # drop_out_layer_1 = cnn.add_drop_out_layer(fc1, keep_prob)
     fc2 = cnn.add_dense_layer(fc1, [[256, 64], [64]])
     # drop_out_layer_2 = cnn.add_drop_out_layer(fc2, keep_prob)
@@ -128,9 +133,10 @@ for iteration in range(ENSEMBLE):
                                tf.global_variables_initializer())
             sess.run(init_op)
 
-            train(MAX_STEPS, sess, x, y_, keep_prob, logits, train_image_batch,
-                  train_label_batch, valid_image_batch, valid_label_batch,
-                  train_step, accuracy, loss, TAGS_THRESHOLDS)
+            train(MAX_STEPS, sess, x, y_, keep_prob, is_train, logits,
+                  train_image_batch, train_label_batch, valid_image_batch,
+                  valid_label_batch, train_step, accuracy, loss,
+                  TAGS_THRESHOLDS)
             save_session(sess, path=MODEL_PATH, sav=saver)
 
     if EVAL:
@@ -151,7 +157,8 @@ for iteration in range(ENSEMBLE):
             sess.run(tf.local_variables_initializer())
 
             restore_session(sess, MODEL_PATH)
-            probs = predict(sess, x, keep_prob, logits, test_image_batch)
+            probs = predict(sess, x, keep_prob, is_train, logits,
+                            test_image_batch)
             ensemble_probs.append(probs)
 
 
