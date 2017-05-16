@@ -2,7 +2,8 @@
 """
 cnn
 
-template built atop tensorflow for constructing Convolutional Neural Network
+template built on top of tensorflow for constructing Convolutional Neural
+Network
 """
 
 import tensorflow as tf
@@ -78,6 +79,12 @@ class ConvolutionalNeuralNetwork:
         """the probability constant to keep output from previous layer."""
         return tf.placeholder(dtype=tf.float32, name='keep_rate')
 
+    @property
+    def is_train(self):
+        """indicates within feed_dict as to if network is under training mode.
+        """
+        return tf.placeholder(dtype=tf.bool, name='is_train')
+
     def add_conv_layer(self, input_layer, hyperparams, func='relu'):
         """Convolution Layer with hyperparamters and activation_func"""
         W = self.weight_variable(shape=hyperparams[0])
@@ -96,6 +103,41 @@ class ConvolutionalNeuralNetwork:
 
         reshaped_x = tf.reshape(input_layer, shape=[-1, hyperparams[0][0]])
         return self.nonlinearity(func)(tf.matmul(reshaped_x, W) + b)
+
+    def add_batch_norm_layer(self, input_layer, is_train):
+        """batch normalization layer, tomokishii's implementation."""
+        input_layer_n = input_layer.get_shape()[-1]
+        with tf.variable_scope('batch_norm'):
+            beta = tf.Variable(tf.constant(0.0, shape=[input_layer_n]),
+                               name='bn_beta',
+                               trainable=True)
+            gamma = tf.Variable(tf.constant(1.0, shape=[input_layer_n]),
+                                name='bn_gamma',
+                                trainable=True)
+            batch_mean, batch_var = tf.nn.moments(x=input_layer,
+                                                  axes=[0, 1, 2],
+                                                  name='moments')
+            ema = tf.train.ExponentialMovingAverage(decay=0.5)
+
+            def mean_var_with_update():
+                """apply exponential moving average ops before returning mean
+                and variance."""
+                ema_apply_op = ema.apply([batch_mean, batch_var])
+                with tf.control_dependencies([ema_apply_op]):
+                    return tf.identity(batch_mean), tf.identity(batch_var)
+
+            mean, var = tf.cond(pred=is_train,
+                                fn1=mean_var_with_update,
+                                fn2=lambda: (ema.average(batch_mean),
+                                             ema.average(batch_var)))
+
+        return tf.nn.batch_normalization(x=input_layer,
+                                         mean=mean,
+                                         variance=var,
+                                         offset=beta,
+                                         scale=gamma,
+                                         variance_epsilon=1e-3,
+                                         name='batch_normalization')
 
     def add_drop_out_layer(self, input_layer, keep_prob):
         """drop out layer to reduce overfitting"""
