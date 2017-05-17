@@ -31,26 +31,27 @@ def vgg_16(class_balance, l2_norm):
     conv_layer_1 = cnn.add_conv_layer(x, [[3, 3, IMAGE_SHAPE[-1], 6], [6]])
     conv_layer_2 = cnn.add_conv_layer(conv_layer_1, [[3, 3, 6, 6], [6]])
     max_pool_1 = cnn.add_pooling_layer(conv_layer_2)
-    conv_layer_3 = cnn.add_conv_layer(max_pool_1, [[3, 3, 6, 12], [12]])
+    batch_norm_1 = cnn.add_batch_norm_layer(max_pool_1, is_train)
+    conv_layer_3 = cnn.add_conv_layer(batch_norm_1, [[3, 3, 6, 12], [12]])
     conv_layer_4 = cnn.add_conv_layer(conv_layer_3, [[3, 3, 12, 12], [12]])
     max_pool_2 = cnn.add_pooling_layer(conv_layer_4)
-    # batch_norm_1 = cnn.add_batch_norm_layer(max_pool_2, is_train)
-    conv_layer_5 = cnn.add_conv_layer(max_pool_2, [[3, 3, 12, 24], [24]])
+    batch_norm_2 = cnn.add_batch_norm_layer(max_pool_2, is_train)
+    conv_layer_5 = cnn.add_conv_layer(batch_norm_2, [[3, 3, 12, 24], [24]])
     conv_layer_6 = cnn.add_conv_layer(conv_layer_5, [[3, 3, 24, 24], [24]])
     conv_layer_7 = cnn.add_conv_layer(conv_layer_6, [[3, 3, 24, 24], [24]])
     max_pool_3 = cnn.add_pooling_layer(conv_layer_7)
-    # batch_norm_2 = cnn.add_batch_norm_layer(max_pool_3, is_train)
-    conv_layer_8 = cnn.add_conv_layer(max_pool_3, [[3, 3, 24, 48], [48]])
+    batch_norm_3 = cnn.add_batch_norm_layer(max_pool_3, is_train)
+    conv_layer_8 = cnn.add_conv_layer(batch_norm_3, [[3, 3, 24, 48], [48]])
     conv_layer_9 = cnn.add_conv_layer(conv_layer_8, [[3, 3, 48, 48], [48]])
     conv_layer_10 = cnn.add_conv_layer(conv_layer_9, [[3, 3, 48, 48], [48]])
     max_pool_4 = cnn.add_pooling_layer(conv_layer_10)
-    # batch_norm_3 = cnn.add_batch_norm_layer(max_pool_4, is_train)
-    conv_layer_11 = cnn.add_conv_layer(max_pool_4, [[3, 3, 48, 48], [48]])
+    batch_norm_4 = cnn.add_batch_norm_layer(max_pool_4, is_train)
+    conv_layer_11 = cnn.add_conv_layer(batch_norm_4, [[3, 3, 48, 48], [48]])
     conv_layer_12 = cnn.add_conv_layer(conv_layer_11, [[3, 3, 48, 48], [48]])
     conv_layer_13 = cnn.add_conv_layer(conv_layer_12, [[3, 3, 48, 48], [48]])
     max_pool_5 = cnn.add_pooling_layer(conv_layer_13)
-    # batch_norm_4 = cnn.add_batch_norm_layer(max_pool_5, is_train)
-    fc1 = cnn.add_dense_layer(max_pool_5, [[4 * 4 * 48, 256], [256]])
+    batch_norm_5 = cnn.add_batch_norm_layer(max_pool_5, is_train)
+    fc1 = cnn.add_dense_layer(batch_norm_5, [[4 * 4 * 48, 256], [256]])
     fc2 = cnn.add_dense_layer(fc1, [[256, 64], [64]])
     logits = cnn.add_read_out_layer(fc2)
     # [batch_size, 17] of logits (θ transpose X) for each of 17 classes
@@ -82,15 +83,15 @@ def vgg_16(class_balance, l2_norm):
 
     loss = tf.reduce_mean(cross_entropy)
 
-    # update_batch_norm_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
-    # with tf.control_dependencies(update_batch_norm_ops):
+    update_batch_norm_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
+    with tf.control_dependencies(update_batch_norm_ops):
         # Numerical Optimisation only ran after updating moving avg and var
-    train_step = tf.train.RMSPropOptimizer(learning_rate=ALPHA,
-                                           decay=0.9,
-                                           momentum=.5,
-                                           epsilon=1e-10,
-                                           use_locking=False,
-                                           centered=False).minimize(loss)
+        train_step = tf.train.RMSPropOptimizer(learning_rate=ALPHA,
+                                               decay=0.9,
+                                               momentum=.5,
+                                               epsilon=1e-10,
+                                               use_locking=False,
+                                               centered=False).minimize(loss)
 
     # eval
     correct_pred = tf.equal(

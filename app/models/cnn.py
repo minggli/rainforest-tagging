@@ -106,11 +106,12 @@ class ConvolutionalNeuralNetwork:
     def add_batch_norm_layer(self, input_layer, is_train):
         """batch normalization layer"""
         return tf.contrib.layers.batch_norm(inputs=input_layer,
-                                            decay=0.99,
+                                            decay=0.999,
                                             epsilon=1e-3,
                                             center=True,
                                             scale=True,
-                                            is_training=is_train)
+                                            is_training=is_train,
+                                            zero_debias_moving_mean=True)
 
     def add_drop_out_layer(self, input_layer, keep_prob):
         """drop out layer to reduce overfitting"""
