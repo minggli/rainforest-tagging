@@ -81,8 +81,7 @@ class ConvolutionalNeuralNetwork:
 
     @property
     def is_train(self):
-        """indicates within feed_dict as to if network is under training mode.
-        """
+        """indicates if network is under training mode."""
         return tf.placeholder(dtype=tf.bool, name='is_train')
 
     def add_conv_layer(self, input_layer, hyperparams, func='relu'):
@@ -106,14 +105,12 @@ class ConvolutionalNeuralNetwork:
 
     def add_batch_norm_layer(self, input_layer, is_train):
         """batch normalization layer"""
-        reuse = True if is_train is False else None
         return tf.contrib.layers.batch_norm(inputs=input_layer,
                                             decay=0.99,
                                             epsilon=1e-3,
                                             center=True,
                                             scale=True,
-                                            is_training=is_train,
-                                            reuse=reuse)
+                                            is_training=is_train)
 
     def add_drop_out_layer(self, input_layer, keep_prob):
         """drop out layer to reduce overfitting"""
