@@ -77,12 +77,14 @@ class ConvolutionalNeuralNetwork:
     @property
     def keep_prob(self):
         """the probability constant to keep output from previous layer."""
-        return tf.placeholder(dtype=tf.float32, name='keep_rate')
+        return tf.placeholder(dtype=tf.float32,
+                              name='keep_rate')
 
     @property
     def is_train(self):
         """indicates if network is under training mode."""
-        return tf.placeholder(dtype=tf.bool, name='is_train')
+        return tf.placeholder(dtype=tf.bool,
+                              name='is_train')
 
     def add_conv_layer(self, input_layer, hyperparams, func='relu'):
         """Convolution Layer with hyperparamters and activation_func"""
@@ -103,15 +105,16 @@ class ConvolutionalNeuralNetwork:
         reshaped_x = tf.reshape(input_layer, shape=[-1, hyperparams[0][0]])
         return self.nonlinearity(func)(tf.matmul(reshaped_x, W) + b)
 
-    def add_batch_norm_layer(self, input_layer, is_train):
+    def add_batch_norm_layer(self, input_layer, is_train, scope_name):
         """batch normalization layer"""
+        reuse_flag = True if is_train is False else None
         return tf.contrib.layers.batch_norm(inputs=input_layer,
-                                            decay=0.999,
-                                            epsilon=1e-3,
+                                            decay=0.99,
                                             center=True,
                                             scale=True,
                                             is_training=is_train,
-                                            zero_debias_moving_mean=True)
+                                            reuse=reuse_flag,
+                                            scope=scope_name)
 
     def add_drop_out_layer(self, input_layer, keep_prob):
         """drop out layer to reduce overfitting"""
