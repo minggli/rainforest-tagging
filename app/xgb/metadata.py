@@ -126,7 +126,7 @@ sess.run(tf.local_variables_initializer())
 with sess:
     X_test, y_ph = materialise_data(test_meta_batch, test_ph_batch)
 
-y_pred = np.zeros_like(y_ph, dtype=np.float32)
+y_pred = np.zeros(shape=[X_test.shape[0], 17], dtype=np.float32)
 for label_index in tqdm(range(17), miniters=1):
     clf = models[label_index]
     np.copyto(y_pred[:, label_index], clf.predict_proba(X_test)[:, 1])
