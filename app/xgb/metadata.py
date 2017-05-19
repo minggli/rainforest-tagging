@@ -13,7 +13,7 @@ import numpy as np
 from tqdm import tqdm
 
 from ..settings import (IMAGE_PATH, IMAGE_SHAPE, TAGS, TAGS_THRESHOLDS,
-                        BATCH_SIZE)
+                        BATCH_SIZE, VALID_SIZE)
 from ..pipeline import data_pipe, generate_data_skeleton, multithreading
 from ..controllers import cal_f2_score, submit
 
@@ -59,7 +59,7 @@ def materialise_data(meta_batch, label_batch, verbose=True):
 train_file_array, train_label_array, valid_file_array, valid_label_array = \
                                             generate_data_skeleton(
                                                 root_dir=IMAGE_PATH + 'train',
-                                                valid_size=.20,
+                                                valid_size=VALID_SIZE,
                                                 ext=('.png', '.csv'))
 train_image_batch, train_label_batch = data_pipe(
                                                 train_file_array,
@@ -94,17 +94,17 @@ with sess:
     X_train, y_train = materialise_data(train_meta_batch, train_label_batch)
 
 # OvR for multi-label classification
-y_pred = np.zeros_like(y_valid, dtype=np.float32)
+y_valid_pred = np.zeros_like(y_valid, dtype=np.float32)
 models = list()
 for label_index in tqdm(range(17), miniters=1):
-    clf = xgb.XGBClassifier(max_depth=5, learning_rate=0.3, n_estimators=300)
+    clf = xgb.XGBClassifier(max_depth=5, learning_rate=0.1, n_estimators=100)
     clf.fit(X_train, y_train[:, label_index])
     # assign position probability to index location
-    np.copyto(y_pred[:, label_index], clf.predict_proba(X_valid)[:, 1])
+    np.copyto(y_valid_pred[:, label_index], clf.predict_proba(X_valid)[:, 1])
     models.append(clf)
 
 print('validation F2-score: {0}'.format(
-        cal_f2_score(y_valid, y_pred, TAGS_THRESHOLDS)))
+        cal_f2_score(y_valid, y_valid_pred, TAGS_THRESHOLDS)))
 
 tf.reset_default_graph()
 test_file_array, test_label_sample = generate_data_skeleton(
@@ -130,4 +130,5 @@ y_pred = np.zeros(shape=[X_test.shape[0], 17], dtype=np.float32)
 for label_index in tqdm(range(17), miniters=1):
     clf = models[label_index]
     np.copyto(y_pred[:, label_index], clf.predict_proba(X_test)[:, 1])
-submit(y_pred, IMAGE_PATH + 'test', TAGS, TAGS_THRESHOLDS)
+xgb_prob = y_pred
+submit(xgb_prob, IMAGE_PATH + 'test', TAGS, TAGS_THRESHOLDS)

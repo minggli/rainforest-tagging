@@ -9,6 +9,7 @@ BATCH_SIZE = 64
 MAX_STEPS = 5000
 ALPHA = 1e-3
 BETA = 1e-2
+VALID_SIZE = .1
 
 TAGS = ['agriculture', 'artisinal_mine', 'bare_ground', 'blooming',
         'blow_down', 'clear', 'cloudy', 'conventional_mine', 'cultivation',
