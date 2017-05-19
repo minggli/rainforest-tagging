@@ -10,6 +10,7 @@ Simonyan K. & Zisserman A. (2015)
 """
 
 import tensorflow as tf
+
 import numpy as np
 
 from ..main import EVAL, TRAIN, ENSEMBLE
