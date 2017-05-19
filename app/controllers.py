@@ -80,7 +80,6 @@ def predict(sess, x, keep_prob, is_train, logits, test_image_batch):
                                   feed_dict={x: test_image, keep_prob: 1.0,
                                              is_train: False})
             complete_pred.append(batch_pred)
-            print(batch_pred[0])
         except tf.errors.OutOfRangeError as e:
             # pipe exhausted with pre-determined number of epochs i.e. 1
             break
