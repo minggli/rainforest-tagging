@@ -11,6 +11,7 @@ Simonyan K. & Zisserman A. (2015)
 
 import tensorflow as tf
 import numpy as np
+
 from ..main import EVAL, TRAIN, ENSEMBLE
 from ..models.cnn import ConvolutionalNeuralNetwork
 from ..settings import (IMAGE_PATH, IMAGE_SHAPE, BATCH_SIZE, MODEL_PATH,
@@ -31,26 +32,26 @@ def vgg_16(class_balance, l2_norm):
     conv_layer_1 = cnn.add_conv_layer(x, [[3, 3, IMAGE_SHAPE[-1], 6], [6]])
     conv_layer_2 = cnn.add_conv_layer(conv_layer_1, [[3, 3, 6, 6], [6]])
     max_pool_1 = cnn.add_pooling_layer(conv_layer_2)
-    batch_norm_1 = cnn.add_batch_norm_layer(max_pool_1, is_train)
+    batch_norm_1 = cnn.add_batch_norm_layer(max_pool_1, is_train, 'bn1')
     conv_layer_3 = cnn.add_conv_layer(batch_norm_1, [[3, 3, 6, 12], [12]])
     conv_layer_4 = cnn.add_conv_layer(conv_layer_3, [[3, 3, 12, 12], [12]])
     max_pool_2 = cnn.add_pooling_layer(conv_layer_4)
-    batch_norm_2 = cnn.add_batch_norm_layer(max_pool_2, is_train)
+    batch_norm_2 = cnn.add_batch_norm_layer(max_pool_2, is_train, 'bn2')
     conv_layer_5 = cnn.add_conv_layer(batch_norm_2, [[3, 3, 12, 24], [24]])
     conv_layer_6 = cnn.add_conv_layer(conv_layer_5, [[3, 3, 24, 24], [24]])
     conv_layer_7 = cnn.add_conv_layer(conv_layer_6, [[3, 3, 24, 24], [24]])
     max_pool_3 = cnn.add_pooling_layer(conv_layer_7)
-    batch_norm_3 = cnn.add_batch_norm_layer(max_pool_3, is_train)
+    batch_norm_3 = cnn.add_batch_norm_layer(max_pool_3, is_train, 'bn3')
     conv_layer_8 = cnn.add_conv_layer(batch_norm_3, [[3, 3, 24, 48], [48]])
     conv_layer_9 = cnn.add_conv_layer(conv_layer_8, [[3, 3, 48, 48], [48]])
     conv_layer_10 = cnn.add_conv_layer(conv_layer_9, [[3, 3, 48, 48], [48]])
     max_pool_4 = cnn.add_pooling_layer(conv_layer_10)
-    batch_norm_4 = cnn.add_batch_norm_layer(max_pool_4, is_train)
+    batch_norm_4 = cnn.add_batch_norm_layer(max_pool_4, is_train, 'bn4')
     conv_layer_11 = cnn.add_conv_layer(batch_norm_4, [[3, 3, 48, 48], [48]])
     conv_layer_12 = cnn.add_conv_layer(conv_layer_11, [[3, 3, 48, 48], [48]])
     conv_layer_13 = cnn.add_conv_layer(conv_layer_12, [[3, 3, 48, 48], [48]])
     max_pool_5 = cnn.add_pooling_layer(conv_layer_13)
-    batch_norm_5 = cnn.add_batch_norm_layer(max_pool_5, is_train)
+    batch_norm_5 = cnn.add_batch_norm_layer(max_pool_5, is_train, 'bn5')
     fc1 = cnn.add_dense_layer(batch_norm_5, [[4 * 4 * 48, 256], [256]])
     fc2 = cnn.add_dense_layer(fc1, [[256, 64], [64]])
     logits = cnn.add_read_out_layer(fc2)
@@ -74,17 +75,17 @@ def vgg_16(class_balance, l2_norm):
     # add L2 regularization on weights from readout layer and dense layers
     if l2_norm:
         weights2norm = [var for var in tf.trainable_variables()
-                        if var.name.startswith(('weight', 'bias'))][-4:]
+                        if var.name.startswith(('weight', 'bias'))][-6:]
         regularizers = tf.add_n([tf.nn.l2_loss(var) for var in weights2norm])
         cross_entropy += BETA * regularizers
 
-    for n in tf.trainable_variables():
+    for n in tf.global_variables():
         print(n)
 
     loss = tf.reduce_mean(cross_entropy)
 
-    update_batch_norm_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
-    with tf.control_dependencies(update_batch_norm_ops):
+    update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
+    with tf.control_dependencies(update_ops):
         # Numerical Optimisation only ran after updating moving avg and var
         train_step = tf.train.RMSPropOptimizer(learning_rate=ALPHA,
                                                decay=0.9,
@@ -92,7 +93,6 @@ def vgg_16(class_balance, l2_norm):
                                                epsilon=1e-10,
                                                use_locking=False,
                                                centered=False).minimize(loss)
-
     # eval
     correct_pred = tf.equal(
                    tf.cast(tf.nn.sigmoid(logits) > TAGS_THRESHOLDS, tf.int8),
@@ -100,9 +100,8 @@ def vgg_16(class_balance, l2_norm):
     # accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
     all_correct_pred = tf.reduce_min(tf.cast(correct_pred, tf.float32), 1)
     accuracy = tf.reduce_mean(all_correct_pred)
-
-    # saver
-    saver = tf.train.Saver(max_to_keep=5, var_list=tf.trainable_variables())
+    # saver, to include all variables including moving mean and var for bn
+    saver = tf.train.Saver(max_to_keep=5, var_list=tf.global_variables())
 
 
 ensemble_probs = list()
