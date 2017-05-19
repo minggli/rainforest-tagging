@@ -8,6 +8,7 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 TRAIN = True if 'TRAIN' in map(str.upper, sys.argv[1:]) else False
 EVAL = True if 'EVAL' in map(str.upper, sys.argv[1:]) else False
+XGB = True if 'XGB' in map(str.upper, sys.argv[1:]) else False
 
 if 'ENSEMBLE' in map(str.upper, sys.argv[1:]):
     ENSEMBLE = 5
@@ -22,3 +23,5 @@ if __name__ == '__main__':
                          'TRAIN, EVAL for convolutional neural net.')
     elif TRAIN or EVAL:
         from .engine import ovr
+    elif XGB:
+        from .xgb import metadata

@@ -94,14 +94,13 @@ with sess:
     X_train, y_train = materialise_data(train_meta_batch, train_label_batch)
 
 # OvR for multi-label classification
-y_pred = np.zeros_like(y_valid)
+y_pred = np.zeros_like(y_valid, dtype=np.float32)
 models = list()
 for label_index in tqdm(range(17), miniters=1):
-    clf = xgb.XGBClassifier(max_depth=5, learning_rate=0.1, n_estimators=100)
+    clf = xgb.XGBClassifier(max_depth=5, learning_rate=0.3, n_estimators=300)
     clf.fit(X_train, y_train[:, label_index])
     # assign position probability to index location
-    y_pred[:, label_index] = clf.predict_proba(X_valid)[:, 1]
-    print(y_pred[:, label_index][:5])
+    np.copyto(y_pred[:, label_index], clf.predict_proba(X_valid)[:, 1])
     models.append(clf)
 
 print('validation F2-score: {0}'.format(
@@ -112,7 +111,7 @@ test_file_array, test_label_sample = generate_data_skeleton(
                                     root_dir=IMAGE_PATH + 'test',
                                     valid_size=None,
                                     ext=('.png', '.csv'))
-test_image_batch, test_label_sample_batch = data_pipe(
+test_image_batch, test_ph_batch = data_pipe(
                                     test_file_array,
                                     test_label_sample,
                                     num_epochs=1,
@@ -125,12 +124,10 @@ sess = tf.Session()
 sess.run(tf.local_variables_initializer())
 
 with sess:
-    X_test, y_test_sample = \
-                materialise_data(test_meta_batch, test_label_sample_batch)
+    X_test, y_ph = materialise_data(test_meta_batch, test_ph_batch)
 
-y_pred = np.zeros_like(y_test_sample)
+y_pred = np.zeros_like(y_ph, dtype=np.float32)
 for label_index in tqdm(range(17), miniters=1):
     clf = models[label_index]
-    y_pred[:, label_index] = clf.predict_proba(X_test)[:, 1]
-    print(y_pred[:, label_index][:5])
+    np.copyto(y_pred[:, label_index], clf.predict_proba(X_test)[:, 1])
 submit(y_pred, IMAGE_PATH + 'test', TAGS, TAGS_THRESHOLDS)
