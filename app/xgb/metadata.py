@@ -13,7 +13,7 @@ import numpy as np
 from tqdm import tqdm
 
 from ..settings import (IMAGE_PATH, IMAGE_SHAPE, TAGS, TAGS_THRESHOLDS,
-                        BATCH_SIZE, VALID_SIZE)
+                        BATCH_SIZE, VALID_SIZE, EXT)
 from ..pipeline import data_pipe, generate_data_skeleton, multithreading
 from ..controllers import cal_f2_score, submit
 
@@ -60,7 +60,7 @@ train_file_array, train_label_array, valid_file_array, valid_label_array = \
                                             generate_data_skeleton(
                                                 root_dir=IMAGE_PATH + 'train',
                                                 valid_size=VALID_SIZE,
-                                                ext=('.png', '.csv'))
+                                                ext=EXT)
 train_image_batch, train_label_batch = data_pipe(
                                                 train_file_array,
                                                 train_label_array,
@@ -110,7 +110,7 @@ tf.reset_default_graph()
 test_file_array, test_label_sample = generate_data_skeleton(
                                     root_dir=IMAGE_PATH + 'test',
                                     valid_size=None,
-                                    ext=('.png', '.csv'))
+                                    ext=EXT)
 test_image_batch, test_ph_batch = data_pipe(
                                     test_file_array,
                                     test_label_sample,

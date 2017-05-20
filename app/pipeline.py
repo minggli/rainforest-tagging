@@ -16,7 +16,7 @@ import tensorflow as tf
 from sklearn import model_selection, preprocessing
 
 
-def folder_traverse(root_dir, ext=('.jpg')):
+def folder_traverse(root_dir, ext=None):
     """recusively map all image files from root directory"""
 
     if not os.path.exists(root_dir):
@@ -44,7 +44,7 @@ def resample(feature_index, labels, balance='auto'):
 
 
 def generate_data_skeleton(root_dir,
-                           ext=('.jpg', '.csv'),
+                           ext=None,
                            valid_size=None,
                            oversample=False):
     """turn file structure into human-readable pandas dataframe"""
@@ -128,9 +128,13 @@ def decode_transform(input_queue,
     label_queue = input_queue[1]
     image_queue = tf.read_file(input_queue[0])
 
-    # !!! decode_jpeg only accepts RGB jpg but not raising error for CMYK :(
-    original_image = tf.image.decode_image(image_queue, channels=0) * 255
+    # !!! decode_jpeg only accepts RGB jpg but not raising error for CMYK
+    # original_image = tf.image.decode_jpeg(contents=image_queue, channels=0)
 
+    original_image = tf.cast(tf.image.decode_png(contents=image_queue,
+                                                 channels=0,
+                                                 dtype=tf.uint16),
+                             tf.int16)
     # crop larger images to 256*256, this func doesn't 'resize'.
     cropped_img = tf.image.resize_image_with_crop_or_pad(
                                 image=original_image,
@@ -138,7 +142,7 @@ def decode_transform(input_queue,
                                 target_width=256)
 
     # resize cropped images to desired shape
-    img = tf.image.resize_images(images=cropped_img, size=[shape[0], shape[1]])
+    img = tf.image.resize_images(images=cropped_img, size=shape[:2])
     img.set_shape(shape)
 
     if distortion:

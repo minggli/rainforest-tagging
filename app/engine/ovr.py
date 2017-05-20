@@ -17,7 +17,7 @@ from ..main import EVAL, TRAIN, ENSEMBLE
 from ..models.cnn import ConvolutionalNeuralNetwork
 from ..settings import (IMAGE_PATH, IMAGE_SHAPE, BATCH_SIZE, MODEL_PATH,
                         MAX_STEPS, ALPHA, BETA, TAGS, TAGS_WEIGHTINGS,
-                        TAGS_THRESHOLDS, VALID_SIZE)
+                        TAGS_THRESHOLDS, VALID_SIZE, EXT)
 from ..pipeline import data_pipe, generate_data_skeleton
 from ..controllers import train, save_session, predict, restore_session, submit
 
@@ -117,7 +117,7 @@ for iteration in range(ENSEMBLE):
                 valid_label_array = generate_data_skeleton(
                                                 root_dir=IMAGE_PATH + 'train',
                                                 valid_size=VALID_SIZE,
-                                                ext=('.png', '.csv'))
+                                                ext=EXT)
             train_image_batch, train_label_batch = data_pipe(
                                                 train_file_array,
                                                 train_label_array,
@@ -148,7 +148,7 @@ for iteration in range(ENSEMBLE):
             test_file_array, _ = generate_data_skeleton(
                                                 root_dir=IMAGE_PATH + 'test',
                                                 valid_size=None,
-                                                ext=('.png', '.csv'))
+                                                ext=EXT)
             # !!! no shuffling and only 1 epoch of test set.
             test_image_batch, _ = data_pipe(
                                                 test_file_array,
