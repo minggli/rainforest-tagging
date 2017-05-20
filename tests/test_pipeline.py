@@ -81,7 +81,7 @@ def test_unshuffle_queue():
 
 
 with sess:
-    total = test_unshuffle_queue()
-    # n = int(input('choose a image to test'))
-    # print(total[n])
+    total = test_shuffle_queue()
+    n = int(input('choose a image to test'))
+    print(total[n])
     # Image.fromarray(np.array(total[n], dtype=np.uint8)).show()
