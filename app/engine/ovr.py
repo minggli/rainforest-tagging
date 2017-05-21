@@ -109,7 +109,7 @@ ensemble_probs = list()
 
 for iteration in range(ENSEMBLE):
     tf.reset_default_graph()
-    vgg_16(class_balance=True, l2_norm=False)
+    vgg_16(class_balance=False, l2_norm=False)
 
     if TRAIN:
         with tf.Session() as sess:
