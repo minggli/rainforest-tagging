@@ -29,7 +29,7 @@ def timeit(func):
     return wrapper
 
 
-def cal_f2_score(y_truth, y_pred, thresholds):
+def calculate_f2_score(y_truth, y_pred, thresholds):
     """batch f2 score as specified in Competition"""
     return metrics.fbeta_score(y_true=y_truth,
                                y_pred=y_pred > thresholds,
@@ -51,7 +51,7 @@ def train(n, sess, x, y_, keep_prob, is_train, logits, train_image_batch,
                 fetches=[optimiser, metric, loss, tf.nn.sigmoid(logits)],
                 feed_dict={x: train_image, y_: train_label, keep_prob: .75,
                            is_train: True})
-        f2_score = cal_f2_score(train_label, y_pred, thresholds)
+        f2_score = calculate_f2_score(train_label, y_pred, thresholds)
         print("step {0} of {3}, train accuracy: {1:.4f}, F2 score: {4:.4f}"
               " log loss: {2:.4f}".format(global_step, train_accuracy,
                                           train_loss, n, f2_score))
@@ -63,7 +63,7 @@ def train(n, sess, x, y_, keep_prob, is_train, logits, train_image_batch,
                 fetches=[metric, loss, tf.nn.sigmoid(logits)],
                 feed_dict={x: valid_image, y_: valid_label, keep_prob: 1.0,
                            is_train: False})
-            f2_score = cal_f2_score(valid_label, y_pred, thresholds)
+            f2_score = calculate_f2_score(valid_label, y_pred, thresholds)
             print("step {0} of {3}, valid accuracy: {1:.4f}, F2 score: {4:.4f}"
                   " log loss: {2:.4f}".format(global_step, valid_accuracy,
                                               loss_score, n, f2_score))
