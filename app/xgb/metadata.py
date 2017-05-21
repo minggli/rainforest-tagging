@@ -15,7 +15,7 @@ from tqdm import tqdm
 from ..settings import (IMAGE_PATH, IMAGE_SHAPE, TAGS, TAGS_THRESHOLDS,
                         BATCH_SIZE, VALID_SIZE, EXT)
 from ..pipeline import data_pipe, generate_data_skeleton, multithreading
-from ..controllers import cal_f2_score, submit
+from ..controllers import calculate_f2_score, submit
 
 
 def extract_meta_features(batch_tensor):
@@ -97,14 +97,14 @@ with sess:
 y_valid_pred = np.zeros_like(y_valid, dtype=np.float32)
 models = list()
 for label_index in tqdm(range(17), miniters=1):
-    clf = xgb.XGBClassifier(max_depth=5, learning_rate=0.1, n_estimators=100)
+    clf = xgb.XGBClassifier(max_depth=5, learning_rate=0.1, n_estimators=300)
     clf.fit(X_train, y_train[:, label_index])
     # assign position probability to index location
     np.copyto(y_valid_pred[:, label_index], clf.predict_proba(X_valid)[:, 1])
     models.append(clf)
 
 print('validation F2-score: {0}'.format(
-        cal_f2_score(y_valid, y_valid_pred, TAGS_THRESHOLDS)))
+        calculate_f2_score(y_valid, y_valid_pred, TAGS_THRESHOLDS)))
 
 tf.reset_default_graph()
 test_file_array, test_label_sample = generate_data_skeleton(
