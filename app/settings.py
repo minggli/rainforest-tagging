@@ -4,14 +4,14 @@
 MODEL_PATH = './trained_models/'
 IMAGE_PATH = './data/'
 EXT = ('.png', '.csv')
-IMAGE_SHAPE = (64, 64, 4)
+IMAGE_SHAPE = (128, 128, 4)
 BATCH_SIZE = 128
 # roughly 10 epochs of training data
 MAX_STEPS = 5000
 EPOCHS = 5
 ALPHA = 5e-4
 BETA = 1e-2
-VALID_SIZE = .15
+VALID_SIZE = .10
 
 TAGS = ['agriculture', 'artisinal_mine', 'bare_ground', 'blooming',
         'blow_down', 'clear', 'cloudy', 'conventional_mine', 'cultivation',
