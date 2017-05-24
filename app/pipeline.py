@@ -121,7 +121,7 @@ def make_queue(paths_to_image, labels, num_epochs=None, shuffle=True):
 def decode_transform(input_queue,
                      shape=None,
                      standardize=True,
-                     distortion=False):
+                     augmentation=None):
     """a single decode and transform function that applies standardization with
     mean centralisation."""
     # input_queue allows slicing with 0: path_to_image, 1: encoded label
@@ -145,10 +145,20 @@ def decode_transform(input_queue,
     img = tf.image.resize_images(images=cropped_img, size=shape[:2])
     img.set_shape(shape)
 
-    if distortion:
+    if augmentation:
         img = tf.image.random_flip_up_down(img)
         img = tf.image.random_flip_left_right(img)
-        img = tf.image.random_contrast(img, lower=.2, upper=2)
+        img = tf.image.rot90(img, k=np.random.randint(4))
+        img = tf.image.random_brightness(img, max_delta=30)
+        img = tf.image.random_contrast(img, lower=.8, upper=1.2)
+        try:
+            # saturation only works for 3-channel RGB images
+            img = tf.image.random_saturation(img, lower=.4, upper=2)
+        except ValueError:
+            pass
+        # restore shape
+        img.set_shape(shape)
+
     # apply standardization
     if standardize:
         img = tf.image.per_image_standardization(img)
@@ -181,16 +191,18 @@ def data_pipe(paths_to_image,
               num_epochs=None,
               batch_size=None,
               shape=None,
+              augmentation=None,
               shuffle=True):
     """so one-in-all from data directory to iterated data feed in batches"""
-    resized_image_queue, label_queue = decode_transform(make_queue(
+    preprocessed_image_queue, label_queue = decode_transform(make_queue(
                                 paths_to_image,
                                 labels,
                                 num_epochs=num_epochs,
                                 shuffle=shuffle),
+                                augmentation=augmentation,
                                 shape=shape)
     image_batch, label_batch = batch_generator(
-                                resized_image_queue,
+                                preprocessed_image_queue,
                                 label_queue,
                                 batch_size=batch_size,
                                 shuffle=shuffle)

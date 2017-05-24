@@ -67,6 +67,7 @@ train_image_batch, train_label_batch = data_pipe(
                                                 num_epochs=1,
                                                 shape=IMAGE_SHAPE,
                                                 batch_size=BATCH_SIZE,
+                                                augmentation=True,
                                                 shuffle=True)
 train_meta_batch = extract_meta_features(train_image_batch)
 
@@ -76,6 +77,7 @@ valid_image_batch, valid_label_batch = data_pipe(
                                                 num_epochs=1,
                                                 shape=IMAGE_SHAPE,
                                                 batch_size=BATCH_SIZE,
+                                                augmentation=True,
                                                 shuffle=True)
 valid_meta_batch = extract_meta_features(valid_image_batch)
 
@@ -117,6 +119,7 @@ test_image_batch, test_ph_batch = data_pipe(
                                     num_epochs=1,
                                     shape=IMAGE_SHAPE,
                                     batch_size=BATCH_SIZE,
+                                    augmentation=False,
                                     shuffle=False)
 test_meta_batch = extract_meta_features(test_image_batch)
 

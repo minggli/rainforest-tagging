@@ -53,7 +53,7 @@ def vgg_16(class_balance, l2_norm):
     conv_layer_13 = cnn.add_conv_layer(conv_layer_12, [[3, 3, 48, 48], [48]])
     max_pool_5 = cnn.add_pooling_layer(conv_layer_13)
     batch_norm_5 = cnn.add_batch_norm_layer(max_pool_5, is_train, 'bn5')
-    fc1 = cnn.add_dense_layer(batch_norm_5, [[4 * 4 * 48, 256], [256]])
+    fc1 = cnn.add_dense_layer(batch_norm_5, [[2 * 2 * 48, 256], [256]])
     fc2 = cnn.add_dense_layer(fc1, [[256, 64], [64]])
     logits = cnn.add_read_out_layer(fc2)
     # [batch_size, 17] of logits (θ transpose X) for each of 17 classes
@@ -124,6 +124,7 @@ for iteration in range(ENSEMBLE):
                                                 num_epochs=None,
                                                 shape=IMAGE_SHAPE,
                                                 batch_size=BATCH_SIZE,
+                                                augmentation=True,
                                                 shuffle=True)
             valid_image_batch, valid_label_batch = data_pipe(
                                                 valid_file_array,
@@ -131,6 +132,7 @@ for iteration in range(ENSEMBLE):
                                                 num_epochs=None,
                                                 shape=IMAGE_SHAPE,
                                                 batch_size=BATCH_SIZE,
+                                                augmentation=True,
                                                 shuffle=True)
 
             init_op = tf.group(tf.local_variables_initializer(),
@@ -156,6 +158,7 @@ for iteration in range(ENSEMBLE):
                                                 num_epochs=1,
                                                 shape=IMAGE_SHAPE,
                                                 batch_size=BATCH_SIZE,
+                                                augmentation=False,
                                                 shuffle=False)
 
             init_op = tf.group(tf.local_variables_initializer(),
