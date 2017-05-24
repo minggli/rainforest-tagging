@@ -17,7 +17,7 @@ from __main__ import EVAL, TRAIN, ENSEMBLE
 from ..models.cnn import ConvolutionalNeuralNetwork
 from ..settings import (IMAGE_PATH, IMAGE_SHAPE, BATCH_SIZE, MODEL_PATH,
                         MAX_STEPS, ALPHA, BETA, TAGS, TAGS_WEIGHTINGS,
-                        TAGS_THRESHOLDS, VALID_SIZE, EXT)
+                        TAGS_THRESHOLDS, VALID_SIZE, EXT, KEEP_RATE)
 from ..pipeline import data_pipe, generate_data_skeleton
 from ..controllers import train, save_session, predict, restore_session, submit
 
@@ -54,8 +54,10 @@ def vgg_16(class_balance, l2_norm):
     max_pool_5 = cnn.add_pooling_layer(conv_layer_13)
     batch_norm_5 = cnn.add_batch_norm_layer(max_pool_5, is_train, 'bn5')
     fc1 = cnn.add_dense_layer(batch_norm_5, [[2 * 2 * 48, 256], [256]])
-    fc2 = cnn.add_dense_layer(fc1, [[256, 64], [64]])
-    logits = cnn.add_read_out_layer(fc2)
+    drop_out_1 = cnn.add_drop_out_layer(fc1, keep_prob)
+    fc2 = cnn.add_dense_layer(drop_out_1, [[256, 64], [64]])
+    drop_out_2 = cnn.add_drop_out_layer(fc2, keep_prob)
+    logits = cnn.add_read_out_layer(drop_out_2)
     # [batch_size, 17] of logits (θ transpose X) for each of 17 classes
 
     # Tensorflow cross_entropy loss API
@@ -142,7 +144,7 @@ for iteration in range(ENSEMBLE):
             train(MAX_STEPS, sess, x, y_, keep_prob, is_train, logits,
                   train_image_batch, train_label_batch, valid_image_batch,
                   valid_label_batch, train_step, accuracy, loss,
-                  TAGS_THRESHOLDS)
+                  TAGS_THRESHOLDS, KEEP_RATE)
             save_session(sess, path=MODEL_PATH, sav=saver)
 
     if EVAL:

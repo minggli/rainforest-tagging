@@ -41,7 +41,7 @@ def calculate_f2_score(y_truth, y_pred, thresholds):
 @multithreading
 def train(n, sess, x, y_, keep_prob, is_train, logits, train_image_batch,
           train_label_batch, valid_image_batch, valid_label_batch, optimiser,
-          metric, loss, thresholds):
+          metric, loss, thresholds, keep_rate):
     """train neural network and produce accuracies with validation set."""
 
     for global_step in range(n):
@@ -49,7 +49,9 @@ def train(n, sess, x, y_, keep_prob, is_train, logits, train_image_batch,
                             sess.run([train_image_batch, train_label_batch])
         _, train_accuracy, train_loss, y_pred = sess.run(
                 fetches=[optimiser, metric, loss, tf.nn.sigmoid(logits)],
-                feed_dict={x: train_image, y_: train_label, keep_prob: .75,
+                feed_dict={x: train_image,
+                           y_: train_label,
+                           keep_prob: keep_rate,
                            is_train: True})
         f2_score = calculate_f2_score(train_label, y_pred, thresholds)
         print("step {0} of {3}, train accuracy: {1:.4f}, F2 score: {4:.4f}"
