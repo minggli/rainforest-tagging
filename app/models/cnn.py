@@ -16,18 +16,21 @@ class ConvolutionalNeuralNetwork:
         self._shape = shape
         self._n_class = num_classes
 
+        self.is_train = self._is_train
+        self.keep_prob = self._keep_prob
+
     @staticmethod
-    def weight_variable(shape):
+    def _weight_variable(shape):
         initial = tf.truncated_normal(shape, stddev=0.1)
         return tf.Variable(initial, name='weight')
 
     @staticmethod
-    def bias_variable(shape):
+    def _bias_variable(shape):
         initial = tf.constant(0.1, shape=shape)
         return tf.Variable(initial, name='bias')
 
     @staticmethod
-    def conv2d(x, W):
+    def _conv2d(x, W):
         """
         core operation that convolves through image data and extract features
         input: takes a 4-D shaped tensor e.g. (-1, 90, 160, 3)
@@ -43,7 +46,7 @@ class ConvolutionalNeuralNetwork:
                             padding='SAME')
 
     @staticmethod
-    def max_pool(x):
+    def _max_pool(x):
         """max pooling with kernal size 2x2 and slide by 2 pixels each time"""
         return tf.nn.max_pool(value=x,
                               ksize=[1, 2, 2, 1],
@@ -51,7 +54,7 @@ class ConvolutionalNeuralNetwork:
                               padding='SAME')
 
     @staticmethod
-    def nonlinearity(activation):
+    def _nonlinearity(activation):
         if activation == 'sigmoid':
             return tf.nn.sigmoid
         elif activation == 'relu':
@@ -75,56 +78,76 @@ class ConvolutionalNeuralNetwork:
                               name='label')
 
     @property
-    def keep_prob(self):
+    def _keep_prob(self):
         """the probability constant to keep output from previous layer."""
         return tf.placeholder(dtype=tf.float32,
                               name='keep_rate')
 
     @property
-    def is_train(self):
+    def _is_train(self):
         """indicates if network is under training mode."""
         return tf.placeholder(dtype=tf.bool,
                               name='is_train')
 
-    def add_conv_layer(self, input_layer, hyperparams, func='relu'):
-        """Convolution Layer with hyperparamters and activation_func"""
-        W = self.weight_variable(shape=hyperparams[0])
-        b = self.bias_variable(shape=hyperparams[1])
-
-        return self.nonlinearity(func)(self.conv2d(input_layer, W) + b)
+    def add_conv_layer(self, input_layer, hyperparams, func='relu', bn=True):
+        """Convolution Layer with hyperparamters and activation and batch
+        normalization after nonlinearity as opposed to before nonlinearity as
+        cited in Ioffe and Szegedy 2015."""
+        W = self._weight_variable(shape=hyperparams[0])
+        b = self._bias_variable(shape=hyperparams[1])
+        if bn:
+            return self._batch_normalize(
+                   self._nonlinearity(func)(self._conv2d(input_layer, W) + b))
+        elif not bn:
+            return self._nonlinearity(func)(self._conv2d(input_layer, W) + b)
 
     def add_pooling_layer(self, input_layer):
         """max pooling layer to reduce overfitting"""
-        return self.max_pool(input_layer)
+        return self._max_pool(input_layer)
 
-    def add_dense_layer(self, input_layer, hyperparams, func='relu'):
-        """Densely Connected Layer with hyperparamters and activation_func"""
-        W = self.weight_variable(shape=hyperparams[0])
-        b = self.bias_variable(shape=hyperparams[1])
+    def add_dense_layer(self, input_layer, hyperparams, func='relu', bn=True):
+        """Densely Connected Layer with hyperparamters and activation.
+        batch normalization inserted after nonlinearity as opposed to before as
+        cited in Ioffe and Szegedy 2015."""
+        W = self._weight_variable(shape=hyperparams[0])
+        b = self._bias_variable(shape=hyperparams[1])
+        x_ravel = tf.reshape(input_layer, shape=[-1, hyperparams[0][0]])
+        if bn:
+            return self._batch_normalize(
+                   self._nonlinearity(func)(tf.matmul(x_ravel, W) + b))
+        elif not bn:
+            return self._nonlinearity(func)(tf.matmul(x_ravel, W) + b)
 
-        reshaped_x = tf.reshape(input_layer, shape=[-1, hyperparams[0][0]])
-        return self.nonlinearity(func)(tf.matmul(reshaped_x, W) + b)
-
-    def add_batch_norm_layer(self, input_layer, is_train, scope_name):
+    def _batch_normalize(self, input_layer):
         """batch normalization layer"""
-        reuse_flag = True if is_train is False else None
+        reuse_flag = True if self.is_train is False else None
         return tf.contrib.layers.batch_norm(inputs=input_layer,
                                             decay=0.99,
                                             center=True,
                                             scale=True,
-                                            is_training=is_train,
-                                            reuse=reuse_flag,
-                                            scope=scope_name)
+                                            is_training=self.is_train,
+                                            reuse=reuse_flag)
 
-    def add_drop_out_layer(self, input_layer, keep_prob):
+    # def add_batch_norm_layer(self, input_layer, is_train, scope_name):
+    #     """batch normalization layer"""
+    #     reuse_flag = True if is_train is False else None
+    #     return tf.contrib.layers.batch_norm(inputs=input_layer,
+    #                                         decay=0.99,
+    #                                         center=True,
+    #                                         scale=True,
+    #                                         is_training=is_train,
+    #                                         reuse=reuse_flag,
+    #                                         scope=scope_name)
+
+    def add_drop_out_layer(self, input_layer):
         """drop out layer to reduce overfitting"""
-        return tf.nn.dropout(input_layer, keep_prob)
+        return tf.nn.dropout(input_layer, self.keep_prob)
 
     def add_read_out_layer(self, input_layer):
         """read out layer with output shape of [batch_size, num_classes]
         in order to feed into softmax"""
         input_layer_m = int(input_layer.get_shape()[1])
-        W = self.weight_variable(shape=[input_layer_m, self._n_class])
-        b = self.bias_variable(shape=[self._n_class])
+        W = self._weight_variable(shape=[input_layer_m, self._n_class])
+        b = self._bias_variable(shape=[self._n_class])
 
         return tf.matmul(input_layer, W) + b
