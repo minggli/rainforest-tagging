@@ -10,6 +10,8 @@ BATCH_SIZE = 128
 MAX_STEPS = 5000
 EPOCHS = 5
 ALPHA = 5e-4
+# Ioffe and Szegedy 2015 suggests 30x learning rate for best accuracy with bn
+# ALPHA *= 30
 BETA = 1e-2
 VALID_SIZE = .10
 KEEP_RATE = .8

@@ -89,6 +89,16 @@ class ConvolutionalNeuralNetwork:
         return tf.placeholder(dtype=tf.bool,
                               name='is_train')
 
+    def _batch_normalize(self, input_layer):
+        """batch normalization layer"""
+        reuse_flag = True if self.is_train is False else None
+        return tf.contrib.layers.batch_norm(inputs=input_layer,
+                                            decay=0.99,
+                                            center=True,
+                                            scale=True,
+                                            is_training=self.is_train,
+                                            reuse=reuse_flag)
+
     def add_conv_layer(self, input_layer, hyperparams, func='relu', bn=True):
         """Convolution Layer with hyperparamters and activation and batch
         normalization after nonlinearity as opposed to before nonlinearity as
@@ -106,8 +116,8 @@ class ConvolutionalNeuralNetwork:
         return self._max_pool(input_layer)
 
     def add_dense_layer(self, input_layer, hyperparams, func='relu', bn=True):
-        """Densely Connected Layer with hyperparamters and activation.
-        batch normalization inserted after nonlinearity as opposed to before as
+        """Densely Connected Layer with hyperparamters and activation. Batch
+        normalization inserted after nonlinearity as opposed to before as
         cited in Ioffe and Szegedy 2015."""
         W = self._weight_variable(shape=hyperparams[0])
         b = self._bias_variable(shape=hyperparams[1])
@@ -117,27 +127,6 @@ class ConvolutionalNeuralNetwork:
                    self._nonlinearity(func)(tf.matmul(x_ravel, W) + b))
         elif not bn:
             return self._nonlinearity(func)(tf.matmul(x_ravel, W) + b)
-
-    def _batch_normalize(self, input_layer):
-        """batch normalization layer"""
-        reuse_flag = True if self.is_train is False else None
-        return tf.contrib.layers.batch_norm(inputs=input_layer,
-                                            decay=0.99,
-                                            center=True,
-                                            scale=True,
-                                            is_training=self.is_train,
-                                            reuse=reuse_flag)
-
-    # def add_batch_norm_layer(self, input_layer, is_train, scope_name):
-    #     """batch normalization layer"""
-    #     reuse_flag = True if is_train is False else None
-    #     return tf.contrib.layers.batch_norm(inputs=input_layer,
-    #                                         decay=0.99,
-    #                                         center=True,
-    #                                         scale=True,
-    #                                         is_training=is_train,
-    #                                         reuse=reuse_flag,
-    #                                         scope=scope_name)
 
     def add_drop_out_layer(self, input_layer):
         """drop out layer to reduce overfitting"""

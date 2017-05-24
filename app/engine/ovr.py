@@ -48,10 +48,10 @@ def vgg_16(class_balance, l2_norm):
     conv_layer_12 = cnn.add_conv_layer(conv_layer_11, [[3, 3, 48, 48], [48]])
     conv_layer_13 = cnn.add_conv_layer(conv_layer_12, [[3, 3, 48, 48], [48]])
     max_pool_5 = cnn.add_pooling_layer(conv_layer_13)
-    fc1 = cnn.add_dense_layer(max_pool_5, [[2 * 2 * 48, 256], [256]])
-    drop_out_1 = cnn.add_drop_out_layer(fc1)
-    fc2 = cnn.add_dense_layer(drop_out_1, [[256, 64], [64]])
-    drop_out_2 = cnn.add_drop_out_layer(fc2)
+    dense_layer_1 = cnn.add_dense_layer(max_pool_5, [[2 * 2 * 48, 256], [256]])
+    drop_out_1 = cnn.add_drop_out_layer(dense_layer_1)
+    dense_layer_2 = cnn.add_dense_layer(drop_out_1, [[256, 64], [64]])
+    drop_out_2 = cnn.add_drop_out_layer(dense_layer_2)
     logits = cnn.add_read_out_layer(drop_out_2)
     # [batch_size, 17] of logits (θ transpose X) for each of 17 classes
 
@@ -64,14 +64,14 @@ def vgg_16(class_balance, l2_norm):
     # cross_entropy = - (y_ * tf.log(1 / (1 + tf.exp(-logits)) + 1e-9) +
     #                  (1 - y_) * tf.log(1 - 1 / (1 + tf.exp(-logits)) + 1e-9))
 
-    # applying label weights to loss function
     if class_balance:
+        # applying inverted label frequencies as weights to loss function
         class_weights = tf.constant([[TAGS_WEIGHTINGS]],
                                     shape=[1, cnn._n_class])
         cross_entropy *= class_weights
 
-    # add L2 regularization on weights from readout layer and dense layers
     if l2_norm:
+        # add L2 regularization on weights from readout layer and dense layers
         weights2norm = [var for var in tf.trainable_variables()
                         if var.name.startswith(('weight', 'bias'))][-6:]
         regularizers = tf.add_n([tf.nn.l2_loss(var) for var in weights2norm])
@@ -86,7 +86,7 @@ def vgg_16(class_balance, l2_norm):
     with tf.control_dependencies(update_ops):
         # Numerical Optimisation only ran after updating moving avg and var
         train_step = tf.train.RMSPropOptimizer(learning_rate=ALPHA,
-                                               decay=0.9,
+                                               decay=0.7,
                                                momentum=.5,
                                                epsilon=1e-10,
                                                use_locking=False,
@@ -121,7 +121,8 @@ for iteration in range(ENSEMBLE):
                                                 num_epochs=None,
                                                 shape=IMAGE_SHAPE,
                                                 batch_size=BATCH_SIZE,
-                                                augmentation=True,
+                                                # no augmentation given bn
+                                                augmentation=False,
                                                 shuffle=True)
             valid_image_batch, valid_label_batch = data_pipe(
                                                 valid_file_array,
@@ -129,7 +130,7 @@ for iteration in range(ENSEMBLE):
                                                 num_epochs=None,
                                                 shape=IMAGE_SHAPE,
                                                 batch_size=BATCH_SIZE,
-                                                augmentation=True,
+                                                augmentation=False,
                                                 shuffle=True)
 
             init_op = tf.group(tf.local_variables_initializer(),
