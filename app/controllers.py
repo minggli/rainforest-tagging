@@ -99,7 +99,7 @@ def submit(predicted_input, path, tags, thresholds):
     tags_predictions = [' '.join(np.array(tags)[boolean_array])
                         for boolean_array in predictions]
     now = datetime.now().strftime('%Y%m%d%H%M%S')
-
+    time.sleep(1)
     template = pd.read_csv(
                 filepath_or_buffer=path + 'sample/sample_submission.csv',
                 encoding='utf8',
