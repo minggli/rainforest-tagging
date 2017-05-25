@@ -15,14 +15,14 @@ sys.path.append(root)
 
 from tqdm import tqdm
 from app.pipeline import folder_traverse
-from app.settings import IMAGE_PATH, EXT, S3_DEFAULT_BUCKET
+from app.settings import IMAGE_PATH, EXT, DEFAULT_BUCKET
 
 
 DOWNLOAD = True if 'DOWNLOAD' in map(str.upper, sys.argv[1:]) else False
 UPLOAD = True if 'UPLOAD' in map(str.upper, sys.argv[1:]) else False
 ERASE = True if 'ERASE' in map(str.upper, sys.argv[1:]) else False
 
-BUCKETNAME = os.getenv(key='BUCKETNAME', default=S3_DEFAULT_BUCKET)
+BUCKETNAME = os.getenv(key='BUCKETNAME', default=DEFAULT_BUCKET)
 s3 = boto3.resource('s3')
 
 if UPLOAD:

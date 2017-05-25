@@ -4,7 +4,7 @@
 MODEL_PATH = './trained_models/'
 IMAGE_PATH = './data/'
 OUTPUT_PATH = './output/'
-S3_DEFAULT_BUCKET = 'amazon-satellite-images'
+DEFAULT_BUCKET = 'rainforest-satellite-images'
 EXT = ('.png', '.csv')
 IMAGE_SHAPE = (128, 128, 4)
 BATCH_SIZE = 128
