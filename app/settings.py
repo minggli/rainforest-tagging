@@ -4,7 +4,7 @@
 MODEL_PATH = './trained_models/'
 IMAGE_PATH = './data/'
 EXT = ('.png', '.csv')
-IMAGE_SHAPE = (64, 64, 4)
+IMAGE_SHAPE = (128, 128, 4)
 BATCH_SIZE = 128
 # roughly 10 epochs of training data
 MAX_STEPS = 5000
