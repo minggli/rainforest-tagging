@@ -27,3 +27,4 @@ for local_path in tqdm(local_paths, ministers=1):
     s3_api.meta.client.upload_file(Filename=local_path,
                                    Bucket=BUCKETNAME,
                                    Key=remote_key_name)
+# !!! catch bucket not exist error, file overwrite error
