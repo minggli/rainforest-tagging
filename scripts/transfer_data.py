@@ -51,8 +51,11 @@ def download_from_remote(remote_path):
 if UPLOAD:
     p = Pool(8)
     fs = folder_traverse(os.path.join(root, IMAGE_PATH), ext=EXT)
-    local_paths = [os.path.join(directory, filename)
-                   for directory in fs for filename in fs[directory]]
+    remote_paths = [obj.key for obj in s3.Bucket(BUCKETNAME).objects.all()]
+    local_paths = [os.path.join(directory, filename) for directory in fs
+                   for filename in fs[directory] if
+                   os.path.join(directory, filename).replace(root + '/./', '')
+                   not in remote_paths]
     for _ in tqdm(p.imap_unordered(upload_to_remote, local_paths),
                   total=len(local_paths)):
         pass
