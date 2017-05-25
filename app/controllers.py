@@ -94,12 +94,14 @@ def predict(sess, x, keep_prob, is_train, logits, test_image_batch):
 @timeit
 def submit(predicted_input, path, tags, thresholds):
     """"produce an output file with predicted probabilities."""
+
     predictions = predicted_input > thresholds
     tags_predictions = [' '.join(np.array(tags)[boolean_array])
                         for boolean_array in predictions]
     now = datetime.now().strftime('%Y%m%d%H%M%S')
+
     template = pd.read_csv(
-                filepath_or_buffer=path + '/sample_submission.csv',
+                filepath_or_buffer=path + 'sample/sample_submission.csv',
                 encoding='utf8',
                 index_col=0)
     df = pd.DataFrame(

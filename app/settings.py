@@ -3,6 +3,8 @@
 # Convolutional Neural Network
 MODEL_PATH = './trained_models/'
 IMAGE_PATH = './data/'
+OUTPUT_PATH = './output/'
+S3_DEFAULT_BUCKET = 'amazon-satellite-images'
 EXT = ('.png', '.csv')
 IMAGE_SHAPE = (128, 128, 4)
 BATCH_SIZE = 128

@@ -16,8 +16,8 @@ import numpy as np
 from __main__ import EVAL, TRAIN, ENSEMBLE
 from ..models.cnn import ConvolutionalNeuralNetwork
 from ..settings import (IMAGE_PATH, IMAGE_SHAPE, BATCH_SIZE, MODEL_PATH,
-                        MAX_STEPS, ALPHA, BETA, TAGS, TAGS_WEIGHTINGS,
-                        TAGS_THRESHOLDS, VALID_SIZE, EXT, KEEP_RATE)
+                        MAX_STEPS, ALPHA, BETA, TAGS, TAGS_WEIGHTINGS, EXT,
+                        TAGS_THRESHOLDS, VALID_SIZE, KEEP_RATE, OUTPUT_PATH)
 from ..pipeline import data_pipe, generate_data_skeleton
 from ..controllers import train, save_session, predict, restore_session, submit
 
@@ -170,7 +170,7 @@ for iteration in range(ENSEMBLE):
 
 if EVAL:
     final_probs = np.mean(ensemble_probs, axis=0)
-    submit(final_probs, IMAGE_PATH + 'test', TAGS, TAGS_THRESHOLDS)
+    submit(final_probs, OUTPUT_PATH, TAGS, TAGS_THRESHOLDS)
 
 # delete session manually to prevent exit error.
 del sess

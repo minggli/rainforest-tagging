@@ -13,7 +13,7 @@ import numpy as np
 from tqdm import tqdm
 
 from ..settings import (IMAGE_PATH, IMAGE_SHAPE, TAGS, TAGS_THRESHOLDS,
-                        BATCH_SIZE, VALID_SIZE, EXT)
+                        BATCH_SIZE, VALID_SIZE, EXT, OUTPUT_PATH)
 from ..pipeline import data_pipe, generate_data_skeleton, multithreading
 from ..controllers import calculate_f2_score, submit
 
@@ -134,4 +134,4 @@ for label_index in tqdm(range(17), miniters=1):
     clf = models[label_index]
     np.copyto(y_pred[:, label_index], clf.predict_proba(X_test)[:, 1])
 xgb_prob = y_pred
-submit(xgb_prob, IMAGE_PATH + 'test', TAGS, TAGS_THRESHOLDS)
+submit(xgb_prob, OUTPUT_PATH, TAGS, TAGS_THRESHOLDS)
