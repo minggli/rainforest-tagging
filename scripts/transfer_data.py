@@ -26,7 +26,7 @@ BUCKETNAME = os.getenv(key='BUCKETNAME', default=DEFAULT_BUCKET)
 s3 = boto3.resource('s3')
 
 if UPLOAD:
-    fs = folder_traverse(os.path.join(root, IMAGE_PATH + 'train'), ext=EXT)
+    fs = folder_traverse(os.path.join(root, IMAGE_PATH), ext=EXT)
     local_paths = [os.path.join(directory, filename)
                    for directory in fs for filename in fs[directory]]
 
@@ -53,4 +53,4 @@ if ERASE:
         print('Valid confirmation. No action taken.')
     elif confirm == BUCKETNAME:
         s3.Bucket(BUCKETNAME).objects.delete()
-        print('All objects in "{0}"'.format(BUCKETNAME))
+        print('All objects in "{0}" deleted'.format(BUCKETNAME))
