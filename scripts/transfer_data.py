@@ -72,7 +72,7 @@ elif ERASE:
     confirm = input('Delete "{0}"? Type name of the bucket to proceed:'.format(
                     BUCKETNAME))
     if confirm != BUCKETNAME:
-        print('Valid confirmation. No action taken.')
+        print('Invalid confirmation. No action taken.')
     elif confirm == BUCKETNAME:
         s3.Bucket(BUCKETNAME).objects.delete()
         print('All objects in "{0}" deleted.'.format(BUCKETNAME))
