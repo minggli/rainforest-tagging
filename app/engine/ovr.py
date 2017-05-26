@@ -48,7 +48,7 @@ def vgg_16(class_balance, l2_norm):
     conv_layer_12 = cnn.add_conv_layer(conv_layer_11, [[3, 3, 48, 48], [48]])
     conv_layer_13 = cnn.add_conv_layer(conv_layer_12, [[3, 3, 48, 48], [48]])
     max_pool_5 = cnn.add_pooling_layer(conv_layer_13)
-    dense_layer_1 = cnn.add_dense_layer(max_pool_5, [[2 * 2 * 48, 256], [256]])
+    dense_layer_1 = cnn.add_dense_layer(max_pool_5, [[4 * 4 * 48, 256], [256]])
     drop_out_1 = cnn.add_drop_out_layer(dense_layer_1)
     dense_layer_2 = cnn.add_dense_layer(drop_out_1, [[256, 64], [64]])
     drop_out_2 = cnn.add_drop_out_layer(dense_layer_2)
