@@ -135,3 +135,7 @@ for label_index in tqdm(range(17), miniters=1):
     np.copyto(y_pred[:, label_index], clf.predict_proba(X_test)[:, 1])
 xgb_prob = y_pred
 submit(xgb_prob, OUTPUT_PATH, TAGS, TAGS_THRESHOLDS)
+
+# removing references to manually free up memory
+tf.reset_default_graph()
+del sess, models, clf
