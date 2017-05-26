@@ -109,7 +109,7 @@ for iteration in range(ENSEMBLE):
     vgg_16(class_balance=False, l2_norm=False)
 
     if TRAIN:
-        with tf.Session() as sess:
+        with tf.Session(config=tf.ConfigProto(log_device_placement=True)) as sess:
             train_file_array, train_label_array, valid_file_array,\
                 valid_label_array = generate_data_skeleton(
                                                 root_dir=IMAGE_PATH + 'train',
@@ -144,7 +144,7 @@ for iteration in range(ENSEMBLE):
             save_session(sess, path=MODEL_PATH, sav=saver)
 
     if EVAL:
-        with tf.Session() as sess:
+        with tf.Session(config=tf.ConfigProto(log_device_placement=True)) as sess:
             test_file_array, _ = generate_data_skeleton(
                                                 root_dir=IMAGE_PATH + 'test',
                                                 valid_size=None,
