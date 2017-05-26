@@ -17,7 +17,8 @@ from __main__ import EVAL, TRAIN, ENSEMBLE
 from ..models.cnn import ConvolutionalNeuralNetwork
 from ..settings import (IMAGE_PATH, IMAGE_SHAPE, BATCH_SIZE, MODEL_PATH,
                         MAX_STEPS, ALPHA, BETA, TAGS, TAGS_WEIGHTINGS, EXT,
-                        TAGS_THRESHOLDS, VALID_SIZE, KEEP_RATE, OUTPUT_PATH)
+                        TAGS_THRESHOLDS, VALID_SIZE, KEEP_RATE, OUTPUT_PATH,
+                        N_THREADS)
 from ..pipeline import data_pipe, generate_data_skeleton
 from ..controllers import train, save_session, predict, restore_session, submit
 
@@ -126,7 +127,8 @@ for iteration in range(ENSEMBLE):
                                                 batch_size=BATCH_SIZE,
                                                 # no augmentation given bn
                                                 augmentation=False,
-                                                shuffle=True)
+                                                shuffle=True,
+                                                threads=N_THREADS)
             valid_image_batch, valid_label_batch = data_pipe(
                                                 valid_file_array,
                                                 valid_label_array,
@@ -134,7 +136,8 @@ for iteration in range(ENSEMBLE):
                                                 shape=IMAGE_SHAPE,
                                                 batch_size=BATCH_SIZE,
                                                 augmentation=False,
-                                                shuffle=True)
+                                                shuffle=True,
+                                                threads=N_THREADS)
 
             init_op = tf.group(tf.local_variables_initializer(),
                                tf.global_variables_initializer())

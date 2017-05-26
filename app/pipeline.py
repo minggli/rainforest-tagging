@@ -166,13 +166,13 @@ def decode_transform(input_queue,
     return img, label_queue
 
 
-def batch_generator(image, label, batch_size=None, shuffle=True):
+def batch_generator(image, label, batch_size=None, shuffle=True, threads=4):
     """turn data queue into batches"""
     if shuffle:
         return tf.train.shuffle_batch(
                                 tensors=[image, label],
                                 batch_size=batch_size,
-                                num_threads=4,
+                                num_threads=threads,
                                 capacity=1e3,
                                 min_after_dequeue=200,
                                 allow_smaller_final_batch=True)
@@ -192,7 +192,8 @@ def data_pipe(paths_to_image,
               batch_size=None,
               shape=None,
               augmentation=None,
-              shuffle=True):
+              shuffle=True,
+              threads=4):
     """so one-in-all from data directory to iterated data feed in batches"""
     preprocessed_image_queue, label_queue = decode_transform(make_queue(
                                 paths_to_image,
@@ -205,7 +206,8 @@ def data_pipe(paths_to_image,
                                 preprocessed_image_queue,
                                 label_queue,
                                 batch_size=batch_size,
-                                shuffle=shuffle)
+                                shuffle=shuffle,
+                                threads=threads)
     return image_batch, label_batch
 
 

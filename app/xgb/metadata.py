@@ -13,7 +13,7 @@ import numpy as np
 from tqdm import tqdm
 
 from ..settings import (IMAGE_PATH, IMAGE_SHAPE, TAGS, TAGS_THRESHOLDS,
-                        BATCH_SIZE, VALID_SIZE, EXT, OUTPUT_PATH)
+                        BATCH_SIZE, VALID_SIZE, EXT, OUTPUT_PATH, N_THREADS)
 from ..pipeline import data_pipe, generate_data_skeleton, multithreading
 from ..controllers import calculate_f2_score, submit
 
@@ -68,7 +68,8 @@ train_image_batch, train_label_batch = data_pipe(
                                                 shape=IMAGE_SHAPE,
                                                 batch_size=BATCH_SIZE,
                                                 augmentation=True,
-                                                shuffle=True)
+                                                shuffle=True,
+                                                threads=N_THREADS)
 train_meta_batch = extract_meta_features(train_image_batch)
 
 valid_image_batch, valid_label_batch = data_pipe(
@@ -78,7 +79,8 @@ valid_image_batch, valid_label_batch = data_pipe(
                                                 shape=IMAGE_SHAPE,
                                                 batch_size=BATCH_SIZE,
                                                 augmentation=True,
-                                                shuffle=True)
+                                                shuffle=True,
+                                                threads=N_THREADS)
 valid_meta_batch = extract_meta_features(valid_image_batch)
 
 init = tf.local_variables_initializer()
