@@ -24,7 +24,7 @@ from ..controllers import train, save_session, predict, restore_session, submit
 
 def vgg_16(class_balance, l2_norm):
 
-    global x, y_, keep_prob, is_train, logits, loss, train_step, accuracy, \
+    global x, y_, keep_prob, is_train, y_pred, loss, train_step, accuracy, \
            saver
 
     cnn = ConvolutionalNeuralNetwork(shape=IMAGE_SHAPE, num_classes=17)
@@ -92,23 +92,24 @@ def vgg_16(class_balance, l2_norm):
                                                use_locking=False,
                                                centered=False).minimize(loss)
     # eval
+    y_pred = tf.nn.sigmoid(logits)
     correct_pred = tf.equal(
-                   tf.cast(tf.nn.sigmoid(logits) > TAGS_THRESHOLDS, tf.int8),
+                   tf.cast(y_pred > TAGS_THRESHOLDS, tf.int8),
                    tf.cast(y_, tf.int8))
     # accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
     all_correct_pred = tf.reduce_min(tf.cast(correct_pred, tf.float32), 1)
     accuracy = tf.reduce_mean(all_correct_pred)
+
+    # saver, to include all variables including moving mean and var for bn
+    saver = tf.train.Saver(max_to_keep=5, var_list=tf.global_variables())
 
 
 ensemble_probs = list()
 
 for iteration in range(ENSEMBLE):
     tf.reset_default_graph()
-    with tf.device('/gpu:0'):
-        vgg_16(class_balance=False, l2_norm=False)
-
-    # saver, to include all variables including moving mean and var for bn
-    saver = tf.train.Saver(max_to_keep=5, var_list=tf.global_variables())
+    # tensorflow prioritises gpu when available
+    vgg_16(class_balance=False, l2_norm=False)
 
     if TRAIN:
         with tf.Session() as sess, tf.device('/cpu:0'):
@@ -138,8 +139,8 @@ for iteration in range(ENSEMBLE):
             init_op = tf.group(tf.local_variables_initializer(),
                                tf.global_variables_initializer())
             sess.run(init_op)
-
-            train(MAX_STEPS, sess, x, y_, keep_prob, is_train, logits,
+            # sess.graph.finalize()
+            train(MAX_STEPS, sess, x, y_, keep_prob, is_train, y_pred,
                   train_image_batch, train_label_batch, valid_image_batch,
                   valid_label_batch, train_step, accuracy, loss,
                   TAGS_THRESHOLDS, KEEP_RATE)
@@ -164,9 +165,9 @@ for iteration in range(ENSEMBLE):
             init_op = tf.group(tf.local_variables_initializer(),
                                tf.global_variables_initializer())
             sess.run(init_op)
-
             restore_session(sess, MODEL_PATH)
-            probs = predict(sess, x, keep_prob, is_train, logits,
+            # sess.graph.finalize()
+            probs = predict(sess, x, keep_prob, is_train, y_pred,
                             test_image_batch)
             ensemble_probs.append(probs)
 
