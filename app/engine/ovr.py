@@ -13,7 +13,7 @@ import tensorflow as tf
 
 import numpy as np
 
-from __main__ import EVAL, TRAIN, ENSEMBLE
+from __main__ import EVAL, TRAIN, ENSEMBLE, CONT
 from ..models.cnn import ConvolutionalNeuralNetwork
 from ..settings import (IMAGE_PATH, IMAGE_SHAPE, BATCH_SIZE, MODEL_PATH,
                         MAX_STEPS, ALPHA, BETA, TAGS, TAGS_WEIGHTINGS, EXT,
@@ -142,7 +142,11 @@ for iteration in range(ENSEMBLE):
             init_op = tf.group(tf.local_variables_initializer(),
                                tf.global_variables_initializer())
             sess.run(init_op)
-            # sess.graph.finalize()
+            if CONT:
+                # option continue from last checkpoint
+                restore_session(sess, MODEL_PATH)
+            # raise exception to check memory leak
+            sess.graph.finalize()
             train(MAX_STEPS, sess, x, y_, keep_prob, is_train, y_pred,
                   train_image_batch, train_label_batch, valid_image_batch,
                   valid_label_batch, train_step, accuracy, loss,
@@ -169,14 +173,18 @@ for iteration in range(ENSEMBLE):
                                tf.global_variables_initializer())
             sess.run(init_op)
             restore_session(sess, MODEL_PATH)
-            # sess.graph.finalize()
+            # raise exception to check memory leak
+            sess.graph.finalize()
             probs = predict(sess, x, keep_prob, is_train, y_pred,
                             test_image_batch)
             ensemble_probs.append(probs)
 
 if EVAL:
-    final_probs = np.mean(ensemble_probs, axis=0)
-    submit(final_probs, OUTPUT_PATH, TAGS, TAGS_THRESHOLDS)
+    if not CONT:
+        final_probs = np.mean(ensemble_probs, axis=0)
+        submit(final_probs, OUTPUT_PATH, TAGS, TAGS_THRESHOLDS)
+    elif CONT:
+        submit(probs, OUTPUT_PATH, TAGS, TAGS_THRESHOLDS)
 
 # delete session manually to prevent exit error.
 del sess

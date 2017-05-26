@@ -8,6 +8,7 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 TRAIN = True if 'TRAIN' in map(str.upper, sys.argv[1:]) else False
 EVAL = True if 'EVAL' in map(str.upper, sys.argv[1:]) else False
+CONT = True if 'CONT' in map(str.upper, sys.argv[1:]) else False
 XGB = True if 'XGB' in map(str.upper, sys.argv[1:]) else False
 TERMINATE = True if 'TERMINATE' in map(str.upper, sys.argv[1:]) else False
 
@@ -19,10 +20,11 @@ else:
     ENSEMBLE = 1
 
 if __name__ == '__main__':
-    if not any([TRAIN, EVAL, ENSEMBLE]):
+    if not any([TRAIN, EVAL, XGB]):
         raise ValueError('missing mode flags.\n\n'
                          'require one of following:\n'
-                         'TRAIN, EVAL for convolutional neural net.')
+                         'TRAIN, EVAL for convolutional neural net.\n'
+                         'XGB for gradient boosting tree.')
     elif XGB and EVAL:
         from .xgb.metadata import xgb_prob
         from .engine.ovr import final_probs as cnn_prob
