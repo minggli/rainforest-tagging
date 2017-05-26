@@ -7,16 +7,19 @@ OUTPUT_PATH = './output/'
 DEFAULT_BUCKET = 'rainforest-satellite-images'
 EXT = ('.png', '.csv')
 IMAGE_SHAPE = (128, 128, 4)
-BATCH_SIZE = 96
+BATCH_SIZE = 128
 # roughly 10 epochs of training data
 MAX_STEPS = 5000
 EPOCHS = 5
 ALPHA = 5e-4
-# Ioffe and Szegedy 2015 suggests 30x learning rate for best accuracy with bn
-# ALPHA *= 30
+
 BETA = 1e-2
 VALID_SIZE = .10
 KEEP_RATE = .8
+
+# Ioffe and Szegedy 2015 suggests 30x learning rate for best accuracy with bn
+ALPHA *= 30
+MAX_STEPS //= 3
 
 TAGS = ['agriculture', 'artisinal_mine', 'bare_ground', 'blooming',
         'blow_down', 'clear', 'cloudy', 'conventional_mine', 'cultivation',
