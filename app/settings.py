@@ -19,7 +19,6 @@ KEEP_RATE = .8
 
 # Ioffe and Szegedy 2015 suggests 5x learning rate with bn
 ALPHA *= 5
-MAX_STEPS //= 3
 
 TAGS = ['agriculture', 'artisinal_mine', 'bare_ground', 'blooming',
         'blow_down', 'clear', 'cloudy', 'conventional_mine', 'cultivation',
