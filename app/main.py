@@ -20,7 +20,7 @@ else:
     ENSEMBLE = 1
 
 if __name__ == '__main__':
-    if not any([TRAIN, EVAL, XGB]):
+    if not any([TRAIN, EVAL, XGB, TERMINATE]):
         raise ValueError('missing mode flags.\n\n'
                          'require one of following:\n'
                          'TRAIN, EVAL for convolutional neural net.\n'
