@@ -106,10 +106,11 @@ ensemble_probs = list()
 
 for iteration in range(ENSEMBLE):
     tf.reset_default_graph()
-    vgg_16(class_balance=False, l2_norm=False)
+    with tf.device('/gpu:0'):
+        vgg_16(class_balance=False, l2_norm=False)
 
     if TRAIN:
-        with tf.Session() as sess:
+        with tf.Session() as sess, tf.device('/cpu:0'):
             train_file_array, train_label_array, valid_file_array,\
                 valid_label_array = generate_data_skeleton(
                                                 root_dir=IMAGE_PATH + 'train',
@@ -144,7 +145,7 @@ for iteration in range(ENSEMBLE):
             save_session(sess, path=MODEL_PATH, sav=saver)
 
     if EVAL:
-        with tf.Session() as sess:
+        with tf.Session() as sess, tf.device('/cpu:0'):
             test_file_array, _ = generate_data_skeleton(
                                                 root_dir=IMAGE_PATH + 'test',
                                                 valid_size=None,
