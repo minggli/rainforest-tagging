@@ -2,7 +2,7 @@
 
 pip3 install --upgrade pip
 pip3 install virtualenv
-virtualenv amazon
+virtualenv amazon -p python3
 amazon/bin/pip3 install -r requirements.txt
 
 # so xgboost can be installed via pip on ubuntu but strangely not on Mac
