@@ -99,7 +99,7 @@ class ConvolutionalNeuralNetwork:
                                             is_training=self.is_train,
                                             reuse=reuse_flag)
 
-    def add_conv_layer(self, input_layer, hyperparams, func='relu', bn=True):
+    def add_conv_layer(self, input_layer, hyperparams, func='relu', bn=False):
         """Convolution Layer with hyperparamters and activation and batch
         normalization after nonlinearity as opposed to before nonlinearity as
         cited in Ioffe and Szegedy 2015."""
@@ -115,7 +115,7 @@ class ConvolutionalNeuralNetwork:
         """max pooling layer to reduce overfitting"""
         return self._max_pool(input_layer)
 
-    def add_dense_layer(self, input_layer, hyperparams, func='relu', bn=True):
+    def add_dense_layer(self, input_layer, hyperparams, func='relu', bn=False):
         """Densely Connected Layer with hyperparamters and activation. Batch
         normalization inserted after nonlinearity as opposed to before as
         cited in Ioffe and Szegedy 2015."""
