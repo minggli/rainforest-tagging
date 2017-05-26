@@ -10,7 +10,7 @@ amazon/bin/pip3 install -r requirements.txt
 if [ "$(uname)" == "Darwin" ]; then
 git clone --recursive https://github.com/dmlc/xgboost
 cd xgboost; cp make/minimum.mk ./config.mk; make -j4
-
+source amazon/bin/activate
 cd python-package; sudo python3 setup.py install
 cd ..; cd ..
 
