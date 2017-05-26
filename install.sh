@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-pip3 install --upgrade pip
-pip3 install virtualenv
+sudo pip3 install --upgrade pip
+sudo pip3 install --upgrade virtualenv
 virtualenv amazon -p python3
 amazon/bin/pip3 install -r requirements.txt
 
