@@ -146,7 +146,7 @@ for iteration in range(ENSEMBLE):
                 # option continue from last checkpoint
                 restore_session(sess, MODEL_PATH)
             # raise exception to check memory leak
-            sess.graph.finalize()
+            # sess.graph.finalize()
             train(MAX_STEPS, sess, x, y_, keep_prob, is_train, y_pred,
                   train_image_batch, train_label_batch, valid_image_batch,
                   valid_label_batch, train_step, accuracy, loss,
@@ -174,7 +174,7 @@ for iteration in range(ENSEMBLE):
             sess.run(init_op)
             restore_session(sess, MODEL_PATH)
             # raise exception to check memory leak
-            sess.graph.finalize()
+            # sess.graph.finalize()
             probs = predict(sess, x, keep_prob, is_train, y_pred,
                             test_image_batch)
             ensemble_probs.append(probs)
