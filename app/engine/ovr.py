@@ -98,8 +98,6 @@ def vgg_16(class_balance, l2_norm):
     # accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
     all_correct_pred = tf.reduce_min(tf.cast(correct_pred, tf.float32), 1)
     accuracy = tf.reduce_mean(all_correct_pred)
-    # saver, to include all variables including moving mean and var for bn
-    saver = tf.train.Saver(max_to_keep=5, var_list=tf.global_variables())
 
 
 ensemble_probs = list()
@@ -108,6 +106,9 @@ for iteration in range(ENSEMBLE):
     tf.reset_default_graph()
     with tf.device('/gpu:0'):
         vgg_16(class_balance=False, l2_norm=False)
+
+    # saver, to include all variables including moving mean and var for bn
+    saver = tf.train.Saver(max_to_keep=5, var_list=tf.global_variables())
 
     if TRAIN:
         with tf.Session() as sess, tf.device('/cpu:0'):
