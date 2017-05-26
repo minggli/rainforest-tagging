@@ -37,4 +37,4 @@ if __name__ == '__main__':
         from .xgb import metadata
 
     if TERMINATE:
-        subprocess.call("../scripts/send_terminate.sh", shell=True)
+        subprocess.call("./scripts/send_terminate.sh", shell=True)
