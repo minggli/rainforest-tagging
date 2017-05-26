@@ -17,8 +17,8 @@ BETA = 1e-2
 VALID_SIZE = .10
 KEEP_RATE = .8
 
-# Ioffe and Szegedy 2015 suggests 30x learning rate for best accuracy with bn
-ALPHA *= 30
+# Ioffe and Szegedy 2015 suggests 5x learning rate with bn
+ALPHA *= 5
 MAX_STEPS //= 3
 
 TAGS = ['agriculture', 'artisinal_mine', 'bare_ground', 'blooming',
