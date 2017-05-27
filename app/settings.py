@@ -17,8 +17,12 @@ ALPHA = 5e-4
 BETA = 1e-2
 VALID_SIZE = .10
 KEEP_RATE = 1
-# Ioffe and Szegedy 2015 suggests 5x learning rate with bn
+
+# Ioffe and Szegedy 2015 suggests 5x learning rate with batch normalization
 ALPHA *= 5
+
+# with data augmentation turned on, need long training steps
+MAX_STEPS *= 4
 
 TAGS = ['agriculture', 'artisinal_mine', 'bare_ground', 'blooming',
         'blow_down', 'clear', 'cloudy', 'conventional_mine', 'cultivation',

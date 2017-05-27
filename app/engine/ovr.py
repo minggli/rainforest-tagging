@@ -126,7 +126,7 @@ for iteration in range(ENSEMBLE):
                                                 shape=IMAGE_SHAPE,
                                                 batch_size=BATCH_SIZE,
                                                 # no augmentation given bn
-                                                augmentation=False,
+                                                augmentation=True,
                                                 shuffle=True,
                                                 threads=N_THREADS)
             valid_image_batch, valid_label_batch = data_pipe(
