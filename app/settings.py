@@ -10,7 +10,7 @@ IMAGE_SHAPE = (128, 128, 4)
 BATCH_SIZE = 128
 N_THREADS = 4
 # roughly 10 epochs of training data
-MAX_STEPS = 5000
+MAX_STEPS = 7000
 EPOCHS = 5
 
 ALPHA = 5e-4
@@ -22,7 +22,9 @@ KEEP_RATE = 1
 ALPHA *= 5
 
 # with data augmentation turned on, need long training steps
-MAX_STEPS *= 4
+AUGMENT = False
+if AUGMENT:
+    MAX_STEPS *= 4
 
 TAGS = ['agriculture', 'artisinal_mine', 'bare_ground', 'blooming',
         'blow_down', 'clear', 'cloudy', 'conventional_mine', 'cultivation',
