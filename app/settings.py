@@ -16,9 +16,9 @@ EPOCHS = 5
 ALPHA = 5e-4
 BETA = 1e-2
 VALID_SIZE = .10
-KEEP_RATE = .8
+KEEP_RATE = 1
 # Ioffe and Szegedy 2015 suggests 5x learning rate with bn
-ALPHA *= 30
+ALPHA *= 5
 
 TAGS = ['agriculture', 'artisinal_mine', 'bare_ground', 'blooming',
         'blow_down', 'clear', 'cloudy', 'conventional_mine', 'cultivation',
