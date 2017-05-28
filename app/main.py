@@ -30,7 +30,7 @@ if __name__ == '__main__':
         from .engine.ovr import final_probs as cnn_prob
         from .settings import TAGS, TAGS_THRESHOLDS, OUTPUT_PATH
         from .controllers import submit
-        p = .7
+        p = .5
         avg_prob = p * cnn_prob + (1 - p) * xgb_prob
         submit(avg_prob, OUTPUT_PATH, TAGS, TAGS_THRESHOLDS)
     elif TRAIN or EVAL:
