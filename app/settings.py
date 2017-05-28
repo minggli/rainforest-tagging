@@ -10,7 +10,7 @@ IMAGE_SHAPE = (128, 128, 4)
 BATCH_SIZE = 128
 N_THREADS = 4
 # roughly 10 epochs of training data
-MAX_STEPS = 7000
+MAX_STEPS = 5500
 EPOCHS = 5
 
 ALPHA = 5e-4
