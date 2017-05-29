@@ -14,7 +14,7 @@ source amazon/bin/activate
 cd python-package; sudo python3 setup.py install
 cd ..; cd ..
 
-rm -rf xgboost
+sudo rm -rf xgboost
 elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
 amazon/bin/pip3 install xgboost
 fi
