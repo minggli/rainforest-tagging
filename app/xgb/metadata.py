@@ -6,7 +6,6 @@ gradient boosting trees on meta data of images (e.g. mean, kurtosis, skewness)
 """
 
 import xgboost as xgb
-
 import tensorflow as tf
 import numpy as np
 
