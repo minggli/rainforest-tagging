@@ -93,6 +93,16 @@ def vgg_16(class_balance, l2_norm):
     saver = tf.train.Saver(max_to_keep=5, var_list=tf.global_variables())
 
 
+train_file_array, train_label_array, valid_file_array, valid_label_array = \
+                    generate_data_skeleton(
+                                    root_dir=IMAGE_PATH + 'train',
+                                    valid_size=VALID_SIZE,
+                                    ext=EXT)
+test_file_array, _ = generate_data_skeleton(
+                                    root_dir=IMAGE_PATH + 'test',
+                                    valid_size=None,
+                                    ext=EXT)
+
 ensemble_probs = list()
 
 for iteration in range(ENSEMBLE):
@@ -100,15 +110,7 @@ for iteration in range(ENSEMBLE):
     tf.reset_default_graph()
 
     cnn = ConvolutionalNeuralNetwork(IMAGE_SHAPE, 17, keep_prob=KEEP_RATE)
-    is_train = cnn.is_train
-    session_config = tf.ConfigProto(allow_soft_placement=True)
-    sess = tf.Session(config=session_config)
-
-    train_file_array, train_label_array, \
-        valid_file_array, valid_label_array = generate_data_skeleton(
-                                                root_dir=IMAGE_PATH + 'train',
-                                                valid_size=VALID_SIZE,
-                                                ext=EXT)
+    is_train, is_test = cnn.is_train, cnn.is_test
     train_image_batch, train_label_batch = data_pipe(
                                                 train_file_array,
                                                 train_label_array,
@@ -128,11 +130,7 @@ for iteration in range(ENSEMBLE):
                                                 augmentation=False,
                                                 shuffle=True,
                                                 threads=N_THREADS)
-    test_file_array, _ = generate_data_skeleton(
-                                                root_dir=IMAGE_PATH + 'test',
-                                                valid_size=None,
-                                                ext=EXT)
-    test_image_batch, dummy_label_batch = data_pipe(
+    test_image_batch, _ = data_pipe(
                                                 test_file_array,
                                                 _,
                                                 num_epochs=1,
@@ -141,43 +139,44 @@ for iteration in range(ENSEMBLE):
                                                 augmentation=False,
                                                 shuffle=False)
 
+    image_feed = tf.cond(is_train,
+                         lambda: train_image_batch,
+                         lambda: tf.cond(is_test, lambda: test_image_batch,
+                                         lambda: valid_image_batch))
+    label_feed = tf.cond(is_train,
+                         lambda: train_label_batch,
+                         lambda: valid_label_batch)
+
+    with tf.device('/gpu:0'):
+        vgg_16(class_balance=False, l2_norm=False)
+
     if TRAIN:
-        with sess.as_default(), tf.device('/cpu:0'):
-
-            image_feed = tf.cond(is_train,
-                                 lambda: train_image_batch,
-                                 lambda: valid_image_batch)
-            label_feed = tf.cond(is_train,
-                                 lambda: train_label_batch,
-                                 lambda: valid_label_batch)
-
-            with tf.device('/gpu:0'):
-                vgg_16(class_balance=False, l2_norm=False)
+        with tf.Session(config=tf.ConfigProto(
+                        allow_soft_placement=True)) as sess,\
+             tf.device('/cpu:0'):
 
             init_op = tf.group(tf.local_variables_initializer(),
                                tf.global_variables_initializer())
+
             sess.run(init_op)
-            sess.graph.finalize()
+            # sess.graph.finalize()
             train(MAX_STEPS, sess, is_train, pred, label_feed, train_step,
                   accuracy, loss, TAGS_THRESHOLDS)
             save_session(sess, path=MODEL_PATH, sav=saver)
 
     if EVAL:
-        with sess.as_default(), tf.device('/cpu:0'):
-
-            image_feed = test_image_batch
-            label_feed = dummy_label_batch
-
-            with tf.device('/gpu:0'):
-                vgg_16(class_balance=False, l2_norm=False)
+        with tf.Session(config=tf.ConfigProto(
+                        allow_soft_placement=True)) as sess,\
+             tf.device('/cpu:0'):
 
             init_op = tf.group(tf.local_variables_initializer(),
                                tf.global_variables_initializer())
+
             sess.run(init_op)
             restore_session(sess, MODEL_PATH)
             # raise exception to check memory leak
             # sess.graph.finalize()
-            probs = predict(sess, pred)
+            probs = predict(sess, pred, is_test)
             ensemble_probs.append(probs)
 
 if EVAL:

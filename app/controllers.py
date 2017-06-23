@@ -44,33 +44,32 @@ def train(n, sess, is_train, pred, label_feed, optimiser, metric, loss,
     """train neural network and produce accuracies with validation set."""
 
     for global_step in range(n):
-
         _, train_accuracy, train_loss, class_prob, train_label = sess.run(
-                fetches=[optimiser, metric, loss, pred, label_feed],
-                feed_dict={is_train: True})
+                        fetches=[optimiser, metric, loss, pred, label_feed],
+                        feed_dict={is_train: True})
         f2_score = calculate_f2_score(train_label, class_prob, thresholds)
         print("step {0} of {3}, train accuracy: {1:.4f}, F2 score: {4:.4f}"
-              " log loss: {2:.4f}".format(global_step, train_accuracy,
-                                          train_loss, n, f2_score))
+              " log loss: {2:.4f}".format(
+                global_step, train_accuracy, train_loss, n, f2_score))
 
         if global_step and global_step % 50 == 0:
-
             valid_accuracy, loss_score, class_prob, valid_label = sess.run(
-                fetches=[metric, loss, pred, label_feed])
+                        fetches=[metric, loss, pred, label_feed])
             f2_score = calculate_f2_score(valid_label, class_prob, thresholds)
             print("step {0} of {3}, valid accuracy: {1:.4f}, F2 score: {4:.4f}"
-                  " log loss: {2:.4f}".format(global_step, valid_accuracy,
-                                              loss_score, n, f2_score))
+                  " log loss: {2:.4f}".format(
+                    global_step, valid_accuracy, loss_score, n, f2_score))
 
 
 @timeit
 @multithreading
-def predict(sess, pred):
+def predict(sess, pred, is_test):
     """predict test set using graph previously trained and saved."""
     complete_pred = list()
     while 1:
         try:
-            complete_pred.append(sess.run(pred))
+            complete_pred.append(sess.run(fetches=[pred],
+                                          feed_dict={is_test: True}))
         except tf.errors.OutOfRangeError as e:
             # pipe exhausted with pre-determined number of epochs i.e. 1
             break
