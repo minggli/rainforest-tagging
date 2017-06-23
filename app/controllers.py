@@ -39,32 +39,24 @@ def calculate_f2_score(y_truth, y_pred, thresholds):
 
 @timeit
 @multithreading
-def train(n, sess, x, y_, keep_prob, is_train, y_pred, train_image_batch,
-          train_label_batch, valid_image_batch, valid_label_batch, optimiser,
-          metric, loss, thresholds, keep_rate):
+def train(n, sess, is_train, pred, label_feed, optimiser, metric, loss,
+          thresholds):
     """train neural network and produce accuracies with validation set."""
 
     for global_step in range(n):
-        train_image, train_label = \
-                            sess.run([train_image_batch, train_label_batch])
-        _, train_accuracy, train_loss, class_prob = sess.run(
-                fetches=[optimiser, metric, loss, y_pred],
-                feed_dict={x: train_image,
-                           y_: train_label,
-                           keep_prob: keep_rate,
-                           is_train: True})
+
+        _, train_accuracy, train_loss, class_prob, train_label = sess.run(
+                fetches=[optimiser, metric, loss, pred, label_feed],
+                feed_dict={is_train: True})
         f2_score = calculate_f2_score(train_label, class_prob, thresholds)
         print("step {0} of {3}, train accuracy: {1:.4f}, F2 score: {4:.4f}"
               " log loss: {2:.4f}".format(global_step, train_accuracy,
                                           train_loss, n, f2_score))
 
         if global_step and global_step % 50 == 0:
-            valid_image, valid_label = \
-                sess.run(fetches=[valid_image_batch, valid_label_batch])
-            valid_accuracy, loss_score, class_prob = sess.run(
-                fetches=[metric, loss, y_pred],
-                feed_dict={x: valid_image, y_: valid_label, keep_prob: 1.0,
-                           is_train: False})
+
+            valid_accuracy, loss_score, class_prob, valid_label = sess.run(
+                fetches=[metric, loss, pred, label_feed])
             f2_score = calculate_f2_score(valid_label, class_prob, thresholds)
             print("step {0} of {3}, valid accuracy: {1:.4f}, F2 score: {4:.4f}"
                   " log loss: {2:.4f}".format(global_step, valid_accuracy,
@@ -73,16 +65,12 @@ def train(n, sess, x, y_, keep_prob, is_train, y_pred, train_image_batch,
 
 @timeit
 @multithreading
-def predict(sess, x, keep_prob, is_train, y_pred, test_image_batch):
+def predict(sess, pred):
     """predict test set using graph previously trained and saved."""
     complete_pred = list()
     while 1:
         try:
-            test_image = sess.run(test_image_batch)
-            batch_pred = sess.run(y_pred,
-                                  feed_dict={x: test_image, keep_prob: 1.0,
-                                             is_train: False})
-            complete_pred.append(batch_pred)
+            complete_pred.append(sess.run(pred))
         except tf.errors.OutOfRangeError as e:
             # pipe exhausted with pre-determined number of epochs i.e. 1
             break

@@ -110,7 +110,7 @@ def generate_data_skeleton(root_dir,
 def make_queue(paths_to_image, labels, num_epochs=None, shuffle=True):
     """returns an Ops Tensor with queued image and label pair"""
     images = tf.convert_to_tensor(paths_to_image, dtype=tf.string)
-    labels = tf.convert_to_tensor(labels, dtype=tf.uint8)
+    labels = tf.convert_to_tensor(labels, dtype=tf.float32)
     input_queue = tf.train.slice_input_producer(
                                 tensor_list=[images, labels],
                                 num_epochs=num_epochs,

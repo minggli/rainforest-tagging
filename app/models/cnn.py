@@ -11,10 +11,11 @@ import tensorflow as tf
 
 class ConvolutionalNeuralNetwork:
 
-    def __init__(self, shape, num_classes):
+    def __init__(self, shape, num_classes, keep_prob=.5):
         """shape: [n_samples, channels, n_features]"""
         self._shape = shape
         self._n_class = num_classes
+        self._keep_rate = keep_prob
 
         self.is_train = self._is_train
         self.keep_prob = self._keep_prob
@@ -80,14 +81,15 @@ class ConvolutionalNeuralNetwork:
     @property
     def _keep_prob(self):
         """the probability constant to keep output from previous layer."""
-        return tf.placeholder(dtype=tf.float32,
-                              name='keep_rate')
+        return tf.cond(self.is_train, lambda: tf.constant(self._keep_rate),
+                                      lambda: tf.constant(1.))
 
     @property
     def _is_train(self):
         """indicates if network is under training mode."""
-        return tf.placeholder(dtype=tf.bool,
-                              name='is_train')
+        return tf.placeholder_with_default(input=False,
+                                           shape=[],
+                                           name='is_train')
 
     def _batch_normalize(self, input_layer):
         """batch normalization layer"""

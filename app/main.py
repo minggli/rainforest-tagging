@@ -8,7 +8,6 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 TRAIN = True if 'TRAIN' in map(str.upper, sys.argv[1:]) else False
 EVAL = True if 'EVAL' in map(str.upper, sys.argv[1:]) else False
-CONT = True if 'CONT' in map(str.upper, sys.argv[1:]) else False
 XGB = True if 'XGB' in map(str.upper, sys.argv[1:]) else False
 TERMINATE = True if 'TERMINATE' in map(str.upper, sys.argv[1:]) else False
 
