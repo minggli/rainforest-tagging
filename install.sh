@@ -20,5 +20,4 @@ amazon/bin/pip3 install xgboost
 fi
 
 # glove vectors and fuller vocabulary
-amazon/bin/python3 -m spacy download en_vectors_glove_md
 amazon/bin/python3 -m spacy download en_core_web_md

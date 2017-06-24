@@ -155,8 +155,8 @@ for iteration in range(ENSEMBLE):
 
             sess.run(init_op)
             sess.graph.finalize()
-            train(MAX_STEPS, sess, is_train, prediction, label_feed, train_step,
-                  accuracy, loss, TAGS_THRESHOLDS)
+            train(MAX_STEPS, sess, is_train, prediction, label_feed,
+                  train_step, accuracy, loss, TAGS_THRESHOLDS)
             save_session(sess, path=MODEL_PATH, sav=saver)
 
     if EVAL:
@@ -169,7 +169,6 @@ for iteration in range(ENSEMBLE):
 
             sess.run(init_op)
             restore_session(sess, MODEL_PATH)
-            sess.graph.finalize()
             probs = predict(sess, prediction, is_test)
             ensemble_probs.append(probs)
 
