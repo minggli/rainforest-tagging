@@ -67,7 +67,8 @@ class ConvolutionalNeuralNetwork:
 
     @property
     def x(self):
-        """feature set"""
+        """feature set, using placeholder to feed data will causing loss of
+        efficiency between Python and C++"""
         return tf.placeholder(dtype=tf.float32,
                               # transform 3D shape to 4D to include batch size
                               shape=(None, ) + self._shape,
@@ -75,7 +76,8 @@ class ConvolutionalNeuralNetwork:
 
     @property
     def y_(self):
-        """ground truth, in one-hot format"""
+        """ground truth, in one-hot format, using placeholder to feed data
+        will causing loss of efficiency between Python and C++"""
         return tf.placeholder(dtype=tf.float32,
                               shape=(None, self._n_class),
                               name='label')

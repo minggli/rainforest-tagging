@@ -95,8 +95,9 @@ def vgg_16(class_balance, l2_norm):
 train_file_array, train_label_array, valid_file_array, valid_label_array = \
                     generate_data_skeleton(root_dir=IMAGE_PATH + 'train',
                                            valid_size=VALID_SIZE, ext=EXT)
-test_file_array, _ = generate_data_skeleton(root_dir=IMAGE_PATH + 'test',
-                                            valid_size=None, ext=EXT)
+test_file_array, dummy_label_array = \
+                    generate_data_skeleton(root_dir=IMAGE_PATH + 'test',
+                                           valid_size=None, ext=EXT)
 
 ensemble_probs = list()
 
@@ -127,7 +128,7 @@ for iteration in range(ENSEMBLE):
                                                 threads=N_THREADS)
     test_image_batch, _ = data_pipe(
                                                 test_file_array,
-                                                _,
+                                                dummy_label_array,
                                                 num_epochs=1,
                                                 shape=IMAGE_SHAPE,
                                                 batch_size=BATCH_SIZE,
@@ -154,7 +155,7 @@ for iteration in range(ENSEMBLE):
                                tf.global_variables_initializer())
 
             sess.run(init_op)
-            sess.graph.finalize()
+            # sess.graph.finalize()
             train(MAX_STEPS, sess, is_train, prediction, label_feed,
                   train_step, accuracy, loss, TAGS_THRESHOLDS)
             save_session(sess, path=MODEL_PATH, sav=saver)
