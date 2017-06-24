@@ -105,43 +105,44 @@ for iteration in range(ENSEMBLE):
 
     tf.reset_default_graph()
 
-    cnn = ConvolutionalNeuralNetwork(IMAGE_SHAPE, 17, keep_prob=KEEP_RATE)
-    is_train, is_test = cnn.is_train, cnn.is_test
-    train_image_batch, train_label_batch = data_pipe(
-                                                train_file_array,
-                                                train_label_array,
-                                                num_epochs=None,
-                                                shape=IMAGE_SHAPE,
-                                                batch_size=BATCH_SIZE,
-                                                # no aug given bn
-                                                augmentation=AUGMENT,
-                                                shuffle=True,
-                                                threads=N_THREADS)
-    valid_image_batch, valid_label_batch = data_pipe(
-                                                valid_file_array,
-                                                valid_label_array,
-                                                num_epochs=None,
-                                                shape=IMAGE_SHAPE,
-                                                batch_size=BATCH_SIZE,
-                                                augmentation=False,
-                                                shuffle=True,
-                                                threads=N_THREADS)
-    test_image_batch, _ = data_pipe(
-                                                test_file_array,
-                                                dummy_label_array,
-                                                num_epochs=1,
-                                                shape=IMAGE_SHAPE,
-                                                batch_size=BATCH_SIZE,
-                                                augmentation=False,
-                                                shuffle=False)
+    with tf.device('/cpu:0'):
+        cnn = ConvolutionalNeuralNetwork(IMAGE_SHAPE, 17, keep_prob=KEEP_RATE)
+        is_train, is_test = cnn.is_train, cnn.is_test
+        train_image_batch, train_label_batch = data_pipe(
+                                                    train_file_array,
+                                                    train_label_array,
+                                                    num_epochs=None,
+                                                    shape=IMAGE_SHAPE,
+                                                    batch_size=BATCH_SIZE,
+                                                    # no aug given bn
+                                                    augmentation=AUGMENT,
+                                                    shuffle=True,
+                                                    threads=N_THREADS)
+        valid_image_batch, valid_label_batch = data_pipe(
+                                                    valid_file_array,
+                                                    valid_label_array,
+                                                    num_epochs=None,
+                                                    shape=IMAGE_SHAPE,
+                                                    batch_size=BATCH_SIZE,
+                                                    augmentation=False,
+                                                    shuffle=True,
+                                                    threads=N_THREADS)
+        test_image_batch, _ = data_pipe(
+                                                    test_file_array,
+                                                    dummy_label_array,
+                                                    num_epochs=1,
+                                                    shape=IMAGE_SHAPE,
+                                                    batch_size=BATCH_SIZE,
+                                                    augmentation=False,
+                                                    shuffle=False)
 
-    image_feed = tf.cond(is_train,
-                         lambda: train_image_batch,
-                         lambda: tf.cond(is_test, lambda: test_image_batch,
-                                         lambda: valid_image_batch))
-    label_feed = tf.cond(is_train,
-                         lambda: train_label_batch,
-                         lambda: valid_label_batch)
+        image_feed = tf.cond(is_train,
+                             lambda: train_image_batch,
+                             lambda: tf.cond(is_test, lambda: test_image_batch,
+                                             lambda: valid_image_batch))
+        label_feed = tf.cond(is_train,
+                             lambda: train_label_batch,
+                             lambda: valid_label_batch)
 
     with tf.device('/gpu:0'):
         vgg_16(class_balance=False, l2_norm=False)
