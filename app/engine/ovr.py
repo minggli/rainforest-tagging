@@ -25,7 +25,7 @@ from ..controllers import train, save_session, predict, restore_session, submit
 
 def vgg_16(class_balance, l2_norm):
 
-    global pred, loss, train_step, accuracy, saver
+    global prediction, loss, train_step, accuracy, saver
 
     conv_layer_1 = \
         cnn.add_conv_layer(image_feed, [[3, 3, IMAGE_SHAPE[-1], 6], [6]])
@@ -55,7 +55,7 @@ def vgg_16(class_balance, l2_norm):
     cross_entropy = tf.nn.sigmoid_cross_entropy_with_logits(logits=logits,
                                                             labels=label_feed)
 
-    # Explicit logistic loss function
+    # Explicit logistic log-loss function
     # cross_entropy = - (y_ * tf.log(1 / (1 + tf.exp(-logits)) + 1e-9) +
     #                  (1 - y_) * tf.log(1 - 1 / (1 + tf.exp(-logits)) + 1e-9))
 
@@ -83,10 +83,9 @@ def vgg_16(class_balance, l2_norm):
                                                epsilon=1e-10,
                                                use_locking=False,
                                                centered=False).minimize(loss)
-    pred = tf.nn.sigmoid(logits)
-    correct_pred = tf.equal(
-                   tf.cast(pred > TAGS_THRESHOLDS, tf.int8),
-                   tf.cast(label_feed, tf.int8))
+    prediction = tf.nn.sigmoid(logits)
+    correct_pred = tf.equal(tf.cast(prediction > TAGS_THRESHOLDS, tf.int8),
+                            tf.cast(label_feed, tf.int8))
     all_correct_pred = tf.reduce_min(tf.cast(correct_pred, tf.float32), 1)
     accuracy = tf.reduce_mean(all_correct_pred)
 
@@ -94,14 +93,10 @@ def vgg_16(class_balance, l2_norm):
 
 
 train_file_array, train_label_array, valid_file_array, valid_label_array = \
-                    generate_data_skeleton(
-                                    root_dir=IMAGE_PATH + 'train',
-                                    valid_size=VALID_SIZE,
-                                    ext=EXT)
-test_file_array, _ = generate_data_skeleton(
-                                    root_dir=IMAGE_PATH + 'test',
-                                    valid_size=None,
-                                    ext=EXT)
+                    generate_data_skeleton(root_dir=IMAGE_PATH + 'train',
+                                           valid_size=VALID_SIZE, ext=EXT)
+test_file_array, _ = generate_data_skeleton(root_dir=IMAGE_PATH + 'test',
+                                            valid_size=None, ext=EXT)
 
 ensemble_probs = list()
 
@@ -159,8 +154,8 @@ for iteration in range(ENSEMBLE):
                                tf.global_variables_initializer())
 
             sess.run(init_op)
-            # sess.graph.finalize()
-            train(MAX_STEPS, sess, is_train, pred, label_feed, train_step,
+            sess.graph.finalize()
+            train(MAX_STEPS, sess, is_train, prediction, label_feed, train_step,
                   accuracy, loss, TAGS_THRESHOLDS)
             save_session(sess, path=MODEL_PATH, sav=saver)
 
@@ -174,9 +169,8 @@ for iteration in range(ENSEMBLE):
 
             sess.run(init_op)
             restore_session(sess, MODEL_PATH)
-            # raise exception to check memory leak
-            # sess.graph.finalize()
-            probs = predict(sess, pred, is_test)
+            sess.graph.finalize()
+            probs = predict(sess, prediction, is_test)
             ensemble_probs.append(probs)
 
 if EVAL:
