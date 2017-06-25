@@ -64,8 +64,9 @@ if UPLOAD:
 elif DOWNLOAD:
     p = Pool(8)
     remote_paths = [obj.key for obj in s3.Bucket(BUCKETNAME).objects.all()]
-    for _ in tqdm(p.imap_unordered(download_from_remote, remote_paths),
-                  total=len(remote_paths)):
+    filtered_remote_path = [key for key in remote_paths if key.endswith(EXT)]
+    for _ in tqdm(p.imap_unordered(download_from_remote, filtered_remote_path),
+                  total=len(filtered_remote_path)):
         pass
 
 elif ERASE:
