@@ -18,8 +18,6 @@ class ConvolutionalNeuralNetwork:
         self._keep_rate = keep_prob
 
         self.is_train = self._is_train
-        self.is_test = self._is_test
-
         self.keep_prob = self._keep_prob
 
     @staticmethod
@@ -94,13 +92,6 @@ class ConvolutionalNeuralNetwork:
         return tf.placeholder_with_default(input=False,
                                            shape=[],
                                            name='is_train')
-
-    @property
-    def _is_test(self):
-        """indicates if network is under test mode."""
-        return tf.placeholder_with_default(input=False,
-                                           shape=[],
-                                           name='is_test')
 
     def _batch_normalize(self, input_layer):
         """batch normalization layer"""

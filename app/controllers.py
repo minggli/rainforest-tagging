@@ -63,13 +63,12 @@ def train(n, sess, is_train, pred, label_feed, optimiser, metric, loss,
 
 @timeit
 @multithreading
-def predict(sess, pred, is_test):
+def predict(sess, pred):
     """predict test set using graph previously trained and saved."""
     complete_pred = list()
     while 1:
         try:
-            complete_pred.append(sess.run(fetches=[pred],
-                                          feed_dict={is_test: True}))
+            complete_pred.append(sess.run(fetches=[pred]))
         except tf.errors.OutOfRangeError as e:
             # pipe exhausted with pre-determined number of epochs i.e. 1
             break

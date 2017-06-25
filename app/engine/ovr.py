@@ -23,9 +23,9 @@ from ..pipeline import data_pipe, generate_data_skeleton
 from ..controllers import train, save_session, predict, restore_session, submit
 
 
-def vgg_16(class_balance, l2_norm):
+def vgg_16_train(class_balance, l2_norm):
 
-    global prediction, loss, train_step, accuracy, saver
+    global prediction, loss, train_step, accuracy, saver, is_train
 
     conv_layer_1 = \
         cnn.add_conv_layer(image_feed, [[3, 3, IMAGE_SHAPE[-1], 6], [6]])
@@ -92,6 +92,37 @@ def vgg_16(class_balance, l2_norm):
     saver = tf.train.Saver(max_to_keep=5, var_list=tf.global_variables())
 
 
+def vgg_16_eval():
+
+    global prediction
+
+    conv_layer_1 = \
+        cnn.add_conv_layer(image_feed, [[3, 3, IMAGE_SHAPE[-1], 6], [6]])
+    conv_layer_2 = cnn.add_conv_layer(conv_layer_1, [[3, 3, 6, 6], [6]])
+    max_pool_1 = cnn.add_pooling_layer(conv_layer_2)
+    conv_layer_3 = cnn.add_conv_layer(max_pool_1, [[3, 3, 6, 12], [12]])
+    conv_layer_4 = cnn.add_conv_layer(conv_layer_3, [[3, 3, 12, 12], [12]])
+    max_pool_2 = cnn.add_pooling_layer(conv_layer_4)
+    conv_layer_5 = cnn.add_conv_layer(max_pool_2, [[3, 3, 12, 24], [24]])
+    conv_layer_6 = cnn.add_conv_layer(conv_layer_5, [[3, 3, 24, 24], [24]])
+    conv_layer_7 = cnn.add_conv_layer(conv_layer_6, [[3, 3, 24, 24], [24]])
+    max_pool_3 = cnn.add_pooling_layer(conv_layer_7)
+    conv_layer_8 = cnn.add_conv_layer(max_pool_3, [[3, 3, 24, 48], [48]])
+    conv_layer_9 = cnn.add_conv_layer(conv_layer_8, [[3, 3, 48, 48], [48]])
+    conv_layer_10 = cnn.add_conv_layer(conv_layer_9, [[3, 3, 48, 48], [48]])
+    max_pool_4 = cnn.add_pooling_layer(conv_layer_10)
+    conv_layer_11 = cnn.add_conv_layer(max_pool_4, [[3, 3, 48, 48], [48]])
+    conv_layer_12 = cnn.add_conv_layer(conv_layer_11, [[3, 3, 48, 48], [48]])
+    conv_layer_13 = cnn.add_conv_layer(conv_layer_12, [[3, 3, 48, 48], [48]])
+    max_pool_5 = cnn.add_pooling_layer(conv_layer_13)
+    dense_layer_1 = cnn.add_dense_layer(max_pool_5, [[4 * 4 * 48, 256], [256]])
+    drop_out_1 = cnn.add_drop_out_layer(dense_layer_1)
+    dense_layer_2 = cnn.add_dense_layer(drop_out_1, [[256, 64], [64]])
+    drop_out_2 = cnn.add_drop_out_layer(dense_layer_2)
+    logits = cnn.add_read_out_layer(drop_out_2)
+    prediction = tf.nn.sigmoid(logits)
+
+
 train_file_array, train_label_array, valid_file_array, valid_label_array = \
                     generate_data_skeleton(root_dir=IMAGE_PATH + 'train',
                                            valid_size=VALID_SIZE, ext=EXT)
@@ -102,55 +133,43 @@ test_file_array, dummy_label_array = \
 ensemble_probs = list()
 
 for iteration in range(ENSEMBLE):
-
-    tf.reset_default_graph()
-
-    with tf.device('/cpu:0'):
-        cnn = ConvolutionalNeuralNetwork(IMAGE_SHAPE, 17, keep_prob=KEEP_RATE)
-        is_train, is_test = cnn.is_train, cnn.is_test
-        train_image_batch, train_label_batch = data_pipe(
-                                                    train_file_array,
-                                                    train_label_array,
-                                                    num_epochs=None,
-                                                    shape=IMAGE_SHAPE,
-                                                    batch_size=BATCH_SIZE,
-                                                    # no aug given bn
-                                                    augmentation=AUGMENT,
-                                                    shuffle=True,
-                                                    threads=N_THREADS)
-        valid_image_batch, valid_label_batch = data_pipe(
-                                                    valid_file_array,
-                                                    valid_label_array,
-                                                    num_epochs=None,
-                                                    shape=IMAGE_SHAPE,
-                                                    batch_size=BATCH_SIZE,
-                                                    augmentation=False,
-                                                    shuffle=True,
-                                                    threads=N_THREADS)
-        test_image_batch, _ = data_pipe(
-                                                    test_file_array,
-                                                    dummy_label_array,
-                                                    num_epochs=1,
-                                                    shape=IMAGE_SHAPE,
-                                                    batch_size=BATCH_SIZE,
-                                                    augmentation=False,
-                                                    shuffle=False)
-
-        image_feed = tf.cond(is_train,
-                             lambda: train_image_batch,
-                             lambda: tf.cond(is_test, lambda: test_image_batch,
-                                             lambda: valid_image_batch))
-        label_feed = tf.cond(is_train,
-                             lambda: train_label_batch,
-                             lambda: valid_label_batch)
-
-    with tf.device('/gpu:0'):
-        vgg_16(class_balance=False, l2_norm=False)
-
     if TRAIN:
-        with tf.Session(config=tf.ConfigProto(
-                        allow_soft_placement=True)) as sess,\
-             tf.device('/cpu:0'):
+        tf.reset_default_graph()
+        with tf.Session(config=tf.ConfigProto(allow_soft_placement=True)) \
+                as sess, tf.device('/cpu:0'):
+            train_image_batch, train_label_batch = data_pipe(
+                                                        train_file_array,
+                                                        train_label_array,
+                                                        num_epochs=None,
+                                                        shape=IMAGE_SHAPE,
+                                                        batch_size=BATCH_SIZE,
+                                                        # no aug given bn
+                                                        augmentation=AUGMENT,
+                                                        shuffle=True,
+                                                        threads=N_THREADS)
+            valid_image_batch, valid_label_batch = data_pipe(
+                                                        valid_file_array,
+                                                        valid_label_array,
+                                                        num_epochs=None,
+                                                        shape=IMAGE_SHAPE,
+                                                        batch_size=BATCH_SIZE,
+                                                        augmentation=False,
+                                                        shuffle=True,
+                                                        threads=N_THREADS)
+
+            cnn = ConvolutionalNeuralNetwork(IMAGE_SHAPE, 17,
+                                             keep_prob=KEEP_RATE)
+            is_train = cnn.is_train
+
+            image_feed = tf.cond(is_train,
+                                 lambda: train_image_batch,
+                                 lambda: valid_image_batch)
+            label_feed = tf.cond(is_train,
+                                 lambda: train_label_batch,
+                                 lambda: valid_label_batch)
+
+            with tf.device('/gpu:0'):
+                vgg_16_train(class_balance=False, l2_norm=False)
 
             init_op = tf.group(tf.local_variables_initializer(),
                                tf.global_variables_initializer())
@@ -162,16 +181,31 @@ for iteration in range(ENSEMBLE):
             save_session(sess, path=MODEL_PATH, sav=saver)
 
     if EVAL:
-        with tf.Session(config=tf.ConfigProto(
-                        allow_soft_placement=True)) as sess,\
-             tf.device('/cpu:0'):
+        tf.reset_default_graph()
+        with tf.Session(config=tf.ConfigProto(allow_soft_placement=True)) \
+                as sess, tf.device('/cpu:0'):
+            test_image_batch, _ = data_pipe(
+                                                        test_file_array,
+                                                        dummy_label_array,
+                                                        num_epochs=1,
+                                                        shape=IMAGE_SHAPE,
+                                                        batch_size=BATCH_SIZE,
+                                                        augmentation=False,
+                                                        shuffle=False)
+
+            cnn = ConvolutionalNeuralNetwork(IMAGE_SHAPE, 17,
+                                             keep_prob=KEEP_RATE)
+            image_feed = test_image_batch
+
+            with tf.device('/gpu:0'):
+                vgg_16_eval(class_balance=False, l2_norm=False)
 
             init_op = tf.group(tf.local_variables_initializer(),
                                tf.global_variables_initializer())
 
             sess.run(init_op)
             restore_session(sess, MODEL_PATH)
-            probs = predict(sess, prediction, is_test)
+            probs = predict(sess, prediction)
             ensemble_probs.append(probs)
 
 if EVAL:
