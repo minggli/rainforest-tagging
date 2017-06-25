@@ -15,7 +15,7 @@ EPOCHS = 5
 
 ALPHA = 5e-4
 BETA = 1e-2
-VALID_SIZE = .20
+VALID_SIZE = .10
 KEEP_RATE = .8
 
 # Ioffe and Szegedy 2015 suggests 5x learning rate with batch normalization
