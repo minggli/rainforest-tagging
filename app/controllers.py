@@ -13,7 +13,7 @@ import tensorflow as tf
 from sklearn import metrics
 from datetime import datetime
 
-from .pipeline import multithreading
+from app.pipeline import multithreading
 
 
 def timeit(func):

@@ -14,16 +14,14 @@ import tensorflow as tf
 import numpy as np
 
 from __main__ import EVAL, TRAIN, ENSEMBLE
-from ..models.cnn import ConvolutionalNeuralNetwork
-from ..settings import (IMAGE_PATH, IMAGE_SHAPE, BATCH_SIZE, MODEL_PATH,
-                        MAX_STEPS, ALPHA, BETA, TAGS, TAGS_WEIGHTINGS, EXT,
-                        TAGS_THRESHOLDS, VALID_SIZE, KEEP_RATE, OUTPUT_PATH,
-                        N_THREADS, AUGMENT)
-from ..pipeline import data_pipe, generate_data_skeleton
-from ..controllers import train, save_session, predict, restore_session, submit
-
-np.random.seed(0)
-tf.set_random_seed(0)
+from app.models.cnn import ConvolutionalNeuralNetwork
+from app.settings import (IMAGE_PATH, IMAGE_SHAPE, BATCH_SIZE, MODEL_PATH,
+                          MAX_STEPS, ALPHA, BETA, TAGS, TAGS_WEIGHTINGS, EXT,
+                          TAGS_THRESHOLDS, VALID_SIZE, KEEP_RATE, OUTPUT_PATH,
+                          N_THREADS, AUGMENT)
+from app.pipeline import data_pipe, generate_data_skeleton
+from app.controllers import (train, save_session, predict, restore_session,
+                             submit)
 
 
 def vgg_16_train(class_balance, l2_norm):

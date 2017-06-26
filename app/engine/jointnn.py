@@ -13,14 +13,14 @@ Kiros et al (2014)
 
 import tensorflow as tf
 
-from ..main import EVAL, TRAIN
-from ..models.cnn import ConvolutionalNeuralNetwork
-# from ..models.rnn import LSTM
-# from ..label2vec import LabelVectorizer
-from ..settings import (IMAGE_PATH, IMAGE_SHAPE, BATCH_SIZE, MODEL_PATH,
+from app.main import EVAL, TRAIN
+from app.models.cnn import ConvolutionalNeuralNetwork
+# from app.models.rnn import LSTM
+# from app.label2vec import LabelVectorizer
+from app.settings import (IMAGE_PATH, IMAGE_SHAPE, BATCH_SIZE, MODEL_PATH,
                         MAX_STEPS, ALPHA, BETA, TAGS, TAGS_WEIGHTINGS)
-from ..pipeline import data_pipe, generate_data_skeleton
-from ..controllers import (train, save_session, predict, submit,
+from app.pipeline import data_pipe, generate_data_skeleton
+from app.controllers import (train, save_session, predict, submit,
                            restore_session)
 
 # Convolutional Neural Network as VGG-16
