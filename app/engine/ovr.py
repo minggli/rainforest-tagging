@@ -160,7 +160,7 @@ for iteration in range(ENSEMBLE):
             cnn = ConvolutionalNeuralNetwork(IMAGE_SHAPE, 17,
                                              keep_prob=KEEP_RATE)
             is_train = cnn.is_train
-
+            # !!! inefficient feeding of data despite 90%+ GPU utilisation
             image_feed = tf.cond(is_train,
                                  lambda: train_image_batch,
                                  lambda: valid_image_batch)
