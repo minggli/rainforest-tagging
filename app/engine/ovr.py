@@ -22,6 +22,9 @@ from ..settings import (IMAGE_PATH, IMAGE_SHAPE, BATCH_SIZE, MODEL_PATH,
 from ..pipeline import data_pipe, generate_data_skeleton
 from ..controllers import train, save_session, predict, restore_session, submit
 
+np.random.seed(0)
+tf.set_random_seed(0)
+
 
 def vgg_16_train(class_balance, l2_norm):
 
@@ -94,7 +97,7 @@ def vgg_16_train(class_balance, l2_norm):
 
 def vgg_16_eval():
 
-    global prediction
+    global prediction, saver
 
     conv_layer_1 = \
         cnn.add_conv_layer(image_feed, [[3, 3, IMAGE_SHAPE[-1], 6], [6]])
@@ -121,6 +124,11 @@ def vgg_16_eval():
     drop_out_2 = cnn.add_drop_out_layer(dense_layer_2)
     logits = cnn.add_read_out_layer(drop_out_2)
     prediction = tf.nn.sigmoid(logits)
+
+    for n in tf.global_variables():
+        print(n)
+    # without saver object restore doesn't actually work.
+    saver = tf.train.Saver(max_to_keep=5, var_list=tf.global_variables())
 
 
 train_file_array, train_label_array, valid_file_array, valid_label_array = \
@@ -192,7 +200,15 @@ for iteration in range(ENSEMBLE):
                                                         batch_size=BATCH_SIZE,
                                                         augmentation=False,
                                                         shuffle=False)
-
+            valid_image_batch, valid_label_batch = data_pipe(
+                                                        valid_file_array,
+                                                        valid_label_array,
+                                                        num_epochs=None,
+                                                        shape=IMAGE_SHAPE,
+                                                        batch_size=BATCH_SIZE,
+                                                        augmentation=False,
+                                                        shuffle=True,
+                                                        threads=N_THREADS)
             cnn = ConvolutionalNeuralNetwork(IMAGE_SHAPE, 17,
                                              keep_prob=KEEP_RATE)
             image_feed = test_image_batch
@@ -211,6 +227,3 @@ for iteration in range(ENSEMBLE):
 if EVAL:
     final_probs = np.mean(ensemble_probs, axis=0)
     submit(final_probs, OUTPUT_PATH, TAGS, TAGS_THRESHOLDS)
-
-# delete session manually to prevent exit error.
-del sess
