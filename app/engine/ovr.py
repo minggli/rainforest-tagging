@@ -198,7 +198,7 @@ for iteration in range(ENSEMBLE):
             image_feed = test_image_batch
 
             with tf.device('/gpu:0'):
-                vgg_16_eval(class_balance=False, l2_norm=False)
+                vgg_16_eval()
 
             init_op = tf.group(tf.local_variables_initializer(),
                                tf.global_variables_initializer())
