@@ -68,7 +68,7 @@ def predict(sess, pred):
     complete_pred = list()
     while 1:
         try:
-            complete_pred.append(sess.run(fetches=[pred]))
+            complete_pred.append(sess.run(fetches=pred))
         except tf.errors.OutOfRangeError as e:
             # pipe exhausted with pre-determined number of epochs i.e. 1
             break
