@@ -26,7 +26,7 @@ def extract_meta_features(batch_tensor):
     std = tf.sqrt(variance)
     channel_max = tf.reduce_max(batch_tensor, axis=(1, 2))
     channel_min = tf.reduce_min(batch_tensor, axis=(1, 2))
-    mean_sub = batch_tensor - tf.reshape(mean, shape=[-1, 1, 1, IMAGE_PATH[-1]])
+    mean_sub = batch_tensor - tf.reshape(mean, shape=[-1, 1, 1, IMAGE_SHAPE[-1]])
     skewness = tf.reduce_mean(mean_sub ** 3, axis=(1, 2)) / std ** 3
     kurtosis = tf.reduce_mean(mean_sub ** 4, axis=(1, 2)) / std ** 4
     feature_stack = tf.stack(values=[mean, std, channel_max, channel_min,
