@@ -149,7 +149,7 @@ def decode_transform(input_queue,
         img = tf.image.random_flip_up_down(img)
         img = tf.image.random_flip_left_right(img)
         img = tf.image.rot90(img, k=np.random.randint(4))
-        img = tf.image.random_brightness(img, max_delta=30)
+        # img = tf.image.random_brightness(img, max_delta=30)
         img = tf.image.random_contrast(img, lower=.8, upper=1.2)
         try:
             # saturation only works for 3-channel RGB images
