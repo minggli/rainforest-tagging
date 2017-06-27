@@ -80,7 +80,7 @@ with tf.device('/cpu:0'):
                                                     num_epochs=1,
                                                     shape=IMAGE_SHAPE,
                                                     batch_size=BATCH_SIZE,
-                                                    augmentation=AUGMENT,
+                                                    augmentation=False,
                                                     shuffle=True,
                                                     threads=N_THREADS)
     valid_meta_batch = extract_meta_features(valid_image_batch)
