@@ -62,40 +62,41 @@ train_file_array, train_label_array, valid_file_array, valid_label_array = \
                                                 root_dir=IMAGE_PATH + 'train',
                                                 valid_size=VALID_SIZE,
                                                 ext=EXT)
-train_image_batch, train_label_batch = data_pipe(
-                                                train_file_array,
-                                                train_label_array,
-                                                num_epochs=1,
-                                                shape=IMAGE_SHAPE,
-                                                batch_size=BATCH_SIZE,
-                                                augmentation=AUGMENT,
-                                                shuffle=True,
-                                                threads=N_THREADS)
-train_meta_batch = extract_meta_features(train_image_batch)
+with tf.device('/cpu:0'):
+    train_image_batch, train_label_batch = data_pipe(
+                                                    train_file_array,
+                                                    train_label_array,
+                                                    num_epochs=1,
+                                                    shape=IMAGE_SHAPE,
+                                                    batch_size=BATCH_SIZE,
+                                                    augmentation=AUGMENT,
+                                                    shuffle=True,
+                                                    threads=N_THREADS)
+    train_meta_batch = extract_meta_features(train_image_batch)
 
-valid_image_batch, valid_label_batch = data_pipe(
-                                                valid_file_array,
-                                                valid_label_array,
-                                                num_epochs=1,
-                                                shape=IMAGE_SHAPE,
-                                                batch_size=BATCH_SIZE,
-                                                augmentation=AUGMENT,
-                                                shuffle=True,
-                                                threads=N_THREADS)
-valid_meta_batch = extract_meta_features(valid_image_batch)
+    valid_image_batch, valid_label_batch = data_pipe(
+                                                    valid_file_array,
+                                                    valid_label_array,
+                                                    num_epochs=1,
+                                                    shape=IMAGE_SHAPE,
+                                                    batch_size=BATCH_SIZE,
+                                                    augmentation=AUGMENT,
+                                                    shuffle=True,
+                                                    threads=N_THREADS)
+    valid_meta_batch = extract_meta_features(valid_image_batch)
 
 init = tf.local_variables_initializer()
 
 sess = tf.Session()
 sess.run(init)
 
-with sess:
+with sess, tf.device('/cpu:0'):
     X_valid, y_valid = materialise_data(valid_meta_batch, valid_label_batch)
 
 sess = tf.Session()
 sess.run(init)
 
-with sess:
+with sess, tf.device('/cpu:0'):
     X_train, y_train = materialise_data(train_meta_batch, train_label_batch)
 
 # OvR for multi-label classification
@@ -112,24 +113,25 @@ print('validation F2-score: {0}'.format(
         calculate_f2_score(y_valid, y_valid_pred, TAGS_THRESHOLDS)))
 
 tf.reset_default_graph()
-test_file_array, test_label_sample = generate_data_skeleton(
-                                    root_dir=IMAGE_PATH + 'test',
-                                    valid_size=None,
-                                    ext=EXT)
-test_image_batch, test_ph_batch = data_pipe(
-                                    test_file_array,
-                                    test_label_sample,
-                                    num_epochs=1,
-                                    shape=IMAGE_SHAPE,
-                                    batch_size=BATCH_SIZE,
-                                    augmentation=False,
-                                    shuffle=False)
-test_meta_batch = extract_meta_features(test_image_batch)
+with tf.device('/cpu:0'):
+    test_file_array, test_label_sample = generate_data_skeleton(
+                                        root_dir=IMAGE_PATH + 'test',
+                                        valid_size=None,
+                                        ext=EXT)
+    test_image_batch, test_ph_batch = data_pipe(
+                                        test_file_array,
+                                        test_label_sample,
+                                        num_epochs=1,
+                                        shape=IMAGE_SHAPE,
+                                        batch_size=BATCH_SIZE,
+                                        augmentation=False,
+                                        shuffle=False)
+    test_meta_batch = extract_meta_features(test_image_batch)
 
 sess = tf.Session()
 sess.run(tf.local_variables_initializer())
 
-with sess:
+with sess, tf.device('/cpu:0'):
     X_test, y_ph = materialise_data(test_meta_batch, test_ph_batch)
 
 y_pred = np.zeros(shape=[X_test.shape[0], 17], dtype=np.float32)

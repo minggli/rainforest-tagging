@@ -198,15 +198,7 @@ for iteration in range(ENSEMBLE):
                                                         batch_size=BATCH_SIZE,
                                                         augmentation=False,
                                                         shuffle=False)
-            valid_image_batch, valid_label_batch = data_pipe(
-                                                        valid_file_array,
-                                                        valid_label_array,
-                                                        num_epochs=None,
-                                                        shape=IMAGE_SHAPE,
-                                                        batch_size=BATCH_SIZE,
-                                                        augmentation=False,
-                                                        shuffle=True,
-                                                        threads=N_THREADS)
+
             cnn = ConvolutionalNeuralNetwork(IMAGE_SHAPE, 17,
                                              keep_prob=KEEP_RATE)
             image_feed = test_image_batch
