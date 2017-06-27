@@ -8,7 +8,7 @@ DEFAULT_BUCKET = 'rainforest-satellite-images'
 EXT = ('.png', '.csv')
 IMAGE_SHAPE = (64, 64, 4)
 BATCH_SIZE = 64
-N_THREADS = 2
+N_THREADS = 4
 # roughly 10 epochs of training data
 MAX_STEPS = 5000
 EPOCHS = 5
