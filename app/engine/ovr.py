@@ -157,7 +157,7 @@ for iteration in range(ENSEMBLE):
                                                         num_epochs=None,
                                                         shape=IMAGE_SHAPE,
                                                         batch_size=BATCH_SIZE,
-                                                        augmentation=False,
+                                                        augmentation=AUGMENT,
                                                         shuffle=True,
                                                         threads=N_THREADS)
 
@@ -194,7 +194,7 @@ for iteration in range(ENSEMBLE):
                                                         num_epochs=1,
                                                         shape=IMAGE_SHAPE,
                                                         batch_size=BATCH_SIZE,
-                                                        augmentation=False,
+                                                        augmentation=AUGMENT,
                                                         shuffle=False)
 
             cnn = ConvolutionalNeuralNetwork(IMAGE_SHAPE, 17,
