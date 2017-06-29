@@ -3,7 +3,7 @@
 ovr
 
 One-versus-Rest approach for multi-label classification, predicting each label
-independently using Convolutional Neural Network similar architecture to VGG-16
+independently using Convolutional Neural Network similar architecture to VGG-32
 
 VERY DEEP CONVOLUTIONAL NETWORKS FOR LARGE-SCALE IMAGE RECOGNITION
 Simonyan K. & Zisserman A. (2015)
@@ -29,27 +29,27 @@ def vgg_16_train(class_balance, l2_norm):
     global prediction, loss, train_step, accuracy, saver, is_train
 
     conv_1 = \
-        cnn.add_conv_layer(image_feed, [[3, 3, IMAGE_SHAPE[-1], 16], [16]])
-    conv_2 = cnn.add_conv_layer(conv_1, [[3, 3, 16, 16], [16]])
+        cnn.add_conv_layer(image_feed, [[3, 3, IMAGE_SHAPE[-1], 32], [32]])
+    conv_2 = cnn.add_conv_layer(conv_1, [[3, 3, 32, 32], [32]])
     max_pool_1 = cnn.add_pooling_layer(conv_2)
-    conv_3 = cnn.add_conv_layer(max_pool_1, [[3, 3, 16, 32], [32]])
-    conv_4 = cnn.add_conv_layer(conv_3, [[3, 3, 32, 32], [32]])
+    conv_3 = cnn.add_conv_layer(max_pool_1, [[3, 3, 32, 64], [64]])
+    conv_4 = cnn.add_conv_layer(conv_3, [[3, 3, 64, 64], [64]])
     max_pool_2 = cnn.add_pooling_layer(conv_4)
-    conv_5 = cnn.add_conv_layer(max_pool_2, [[3, 3, 32, 64], [64]])
-    conv_6 = cnn.add_conv_layer(conv_5, [[3, 3, 64, 64], [64]])
-    conv_7 = cnn.add_conv_layer(conv_6, [[3, 3, 64, 64], [64]])
+    conv_5 = cnn.add_conv_layer(max_pool_2, [[3, 3, 64, 128], [128]])
+    conv_6 = cnn.add_conv_layer(conv_5, [[3, 3, 128, 128], [128]])
+    conv_7 = cnn.add_conv_layer(conv_6, [[3, 3, 128, 128], [128]])
     max_pool_3 = cnn.add_pooling_layer(conv_7)
-    conv_8 = cnn.add_conv_layer(max_pool_3, [[3, 3, 64, 128], [128]])
-    conv_9 = cnn.add_conv_layer(conv_8, [[3, 3, 128, 128], [128]])
-    conv_10 = cnn.add_conv_layer(conv_9, [[3, 3, 128, 128], [128]])
+    conv_8 = cnn.add_conv_layer(max_pool_3, [[3, 3, 128, 256], [256]])
+    conv_9 = cnn.add_conv_layer(conv_8, [[3, 3, 256, 256], [256]])
+    conv_10 = cnn.add_conv_layer(conv_9, [[3, 3, 256, 256], [256]])
     max_pool_4 = cnn.add_pooling_layer(conv_10)
-    conv_11 = cnn.add_conv_layer(max_pool_4, [[3, 3, 128, 128], [128]])
-    conv_12 = cnn.add_conv_layer(conv_11, [[3, 3, 128, 128], [128]])
-    conv_13 = cnn.add_conv_layer(conv_12, [[3, 3, 128, 128], [128]])
+    conv_11 = cnn.add_conv_layer(max_pool_4, [[3, 3, 256, 256], [256]])
+    conv_12 = cnn.add_conv_layer(conv_11, [[3, 3, 256, 256], [256]])
+    conv_13 = cnn.add_conv_layer(conv_12, [[3, 3, 256, 256], [256]])
     max_pool_5 = cnn.add_pooling_layer(conv_13)
-    dense_1 = cnn.add_dense_layer(max_pool_5, [[2 * 2 * 128, 1024], [1024]])
+    dense_1 = cnn.add_dense_layer(max_pool_5, [[2 * 2 * 256, 2048], [2048]])
     drop_out_1 = cnn.add_drop_out_layer(dense_1)
-    dense_2 = cnn.add_dense_layer(drop_out_1, [[1024, 256], [256]])
+    dense_2 = cnn.add_dense_layer(drop_out_1, [[2048, 512], [512]])
     drop_out_2 = cnn.add_drop_out_layer(dense_2)
     logits = cnn.add_read_out_layer(drop_out_2)
 
@@ -67,7 +67,7 @@ def vgg_16_train(class_balance, l2_norm):
 
     if l2_norm:
         weights2norm = [var for var in tf.trainable_variables()
-                        if var.name.startswith(('weight', 'bias'))][-6:]
+                        if var.name.startswith(('weight', 'bias'))][-32:]
         regularizers = tf.add_n([tf.nn.l2_loss(var) for var in weights2norm])
         cross_entropy += BETA * regularizers
 
@@ -98,33 +98,31 @@ def vgg_16_eval():
     global prediction, saver
 
     conv_1 = \
-        cnn.add_conv_layer(image_feed, [[3, 3, IMAGE_SHAPE[-1], 16], [16]])
-    conv_2 = cnn.add_conv_layer(conv_1, [[3, 3, 16, 16], [16]])
+        cnn.add_conv_layer(image_feed, [[3, 3, IMAGE_SHAPE[-1], 32], [32]])
+    conv_2 = cnn.add_conv_layer(conv_1, [[3, 3, 32, 32], [32]])
     max_pool_1 = cnn.add_pooling_layer(conv_2)
-    conv_3 = cnn.add_conv_layer(max_pool_1, [[3, 3, 16, 32], [32]])
-    conv_4 = cnn.add_conv_layer(conv_3, [[3, 3, 32, 32], [32]])
+    conv_3 = cnn.add_conv_layer(max_pool_1, [[3, 3, 32, 64], [64]])
+    conv_4 = cnn.add_conv_layer(conv_3, [[3, 3, 64, 64], [64]])
     max_pool_2 = cnn.add_pooling_layer(conv_4)
-    conv_5 = cnn.add_conv_layer(max_pool_2, [[3, 3, 32, 64], [64]])
-    conv_6 = cnn.add_conv_layer(conv_5, [[3, 3, 64, 64], [64]])
-    conv_7 = cnn.add_conv_layer(conv_6, [[3, 3, 64, 64], [64]])
+    conv_5 = cnn.add_conv_layer(max_pool_2, [[3, 3, 64, 128], [128]])
+    conv_6 = cnn.add_conv_layer(conv_5, [[3, 3, 128, 128], [128]])
+    conv_7 = cnn.add_conv_layer(conv_6, [[3, 3, 128, 128], [128]])
     max_pool_3 = cnn.add_pooling_layer(conv_7)
-    conv_8 = cnn.add_conv_layer(max_pool_3, [[3, 3, 64, 128], [128]])
-    conv_9 = cnn.add_conv_layer(conv_8, [[3, 3, 128, 128], [128]])
-    conv_10 = cnn.add_conv_layer(conv_9, [[3, 3, 128, 128], [128]])
+    conv_8 = cnn.add_conv_layer(max_pool_3, [[3, 3, 128, 256], [256]])
+    conv_9 = cnn.add_conv_layer(conv_8, [[3, 3, 256, 256], [256]])
+    conv_10 = cnn.add_conv_layer(conv_9, [[3, 3, 256, 256], [256]])
     max_pool_4 = cnn.add_pooling_layer(conv_10)
-    conv_11 = cnn.add_conv_layer(max_pool_4, [[3, 3, 128, 128], [128]])
-    conv_12 = cnn.add_conv_layer(conv_11, [[3, 3, 128, 128], [128]])
-    conv_13 = cnn.add_conv_layer(conv_12, [[3, 3, 128, 128], [128]])
+    conv_11 = cnn.add_conv_layer(max_pool_4, [[3, 3, 256, 256], [256]])
+    conv_12 = cnn.add_conv_layer(conv_11, [[3, 3, 256, 256], [256]])
+    conv_13 = cnn.add_conv_layer(conv_12, [[3, 3, 256, 256], [256]])
     max_pool_5 = cnn.add_pooling_layer(conv_13)
-    dense_1 = cnn.add_dense_layer(max_pool_5, [[2 * 2 * 128, 1024], [1024]])
+    dense_1 = cnn.add_dense_layer(max_pool_5, [[2 * 2 * 256, 2048], [2048]])
     drop_out_1 = cnn.add_drop_out_layer(dense_1)
-    dense_2 = cnn.add_dense_layer(drop_out_1, [[1024, 256], [256]])
+    dense_2 = cnn.add_dense_layer(drop_out_1, [[2048, 512], [512]])
     drop_out_2 = cnn.add_drop_out_layer(dense_2)
     logits = cnn.add_read_out_layer(drop_out_2)
     prediction = tf.nn.sigmoid(logits)
 
-    for n in tf.global_variables():
-        print(n)
     # without saver object restore doesn't actually work.
     saver = tf.train.Saver(max_to_keep=5, var_list=tf.global_variables())
 
