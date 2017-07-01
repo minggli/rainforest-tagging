@@ -150,7 +150,8 @@ def densenet(class_balance=False, l2_norm=False):
     dim = int(global_pool.get_shape()[-1])
     dense_layer_1 = dn.add_dense_layer(global_pool, [[dim, 1000], [1000]],
                                        bn=False)
-    logits = dn.add_read_out_layer(dense_layer_1)
+    drop_out_1 = dn.add_drop_out_layer(dense_layer_1)
+    logits = dn.add_read_out_layer(drop_out_1)
 
     cross_entropy = tf.nn.sigmoid_cross_entropy_with_logits(logits=logits,
                                                             labels=label_feed)
@@ -210,7 +211,9 @@ def densenet_eval():
     dim = int(global_pool.get_shape()[-1])
     dense_layer_1 = dn.add_dense_layer(global_pool, [[dim, 1000], [1000]],
                                        bn=False)
-    logits = dn.add_read_out_layer(dense_layer_1)
+    drop_out_1 = dn.add_drop_out_layer(dense_layer_1)
+    logits = dn.add_read_out_layer(drop_out_1)
+
     prediction = tf.nn.sigmoid(logits)
     saver = tf.train.Saver(max_to_keep=5, var_list=tf.global_variables())
 
@@ -239,15 +242,15 @@ for iteration in range(ENSEMBLE):
                                                         augmentation=AUGMENT,
                                                         shuffle=True,
                                                         threads=N_THREADS)
-            valid_image_batch, valid_label_batch = data_pipe(
-                                                        valid_file_array,
-                                                        valid_label_array,
-                                                        num_epochs=None,
-                                                        shape=IMAGE_SHAPE,
-                                                        batch_size=BATCH_SIZE,
-                                                        augmentation=AUGMENT,
-                                                        shuffle=True,
-                                                        threads=N_THREADS)
+            # valid_image_batch, valid_label_batch = data_pipe(
+            #                                             valid_file_array,
+            #                                             valid_label_array,
+            #                                             num_epochs=None,
+            #                                             shape=IMAGE_SHAPE,
+            #                                             batch_size=BATCH_SIZE,
+            #                                             augmentation=AUGMENT,
+            #                                             shuffle=True,
+            #                                             threads=N_THREADS)
 
             # cnn = ConvolutionalNeuralNetwork(IMAGE_SHAPE, 17,
             #                                  keep_prob=KEEP_RATE)
@@ -261,12 +264,14 @@ for iteration in range(ENSEMBLE):
                           compression=.5)
             is_train = dn.is_train
             # !!! inefficient feeding of data despite 90%+ GPU utilisation
-            image_feed = tf.cond(is_train,
-                                 lambda: train_image_batch,
-                                 lambda: valid_image_batch)
-            label_feed = tf.cond(is_train,
-                                 lambda: train_label_batch,
-                                 lambda: valid_label_batch)
+            # image_feed = tf.cond(is_train,
+            #                      lambda: train_image_batch,
+            #                      lambda: valid_image_batch)
+            # label_feed = tf.cond(is_train,
+            #                      lambda: train_label_batch,
+            #                      lambda: valid_label_batch)
+            image_feed = train_image_batch
+            label_feed = valid_label_batch
 
             with tf.device('/gpu:0'):
                 densenet(class_balance=False, l2_norm=False)
