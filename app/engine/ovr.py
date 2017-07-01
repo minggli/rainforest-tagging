@@ -271,7 +271,7 @@ for iteration in range(ENSEMBLE):
             #                      lambda: train_label_batch,
             #                      lambda: valid_label_batch)
             image_feed = train_image_batch
-            label_feed = valid_label_batch
+            label_feed = train_label_batch
 
             with tf.device('/gpu:0'):
                 densenet(class_balance=False, l2_norm=False)
