@@ -52,18 +52,18 @@ class ConvolutionalNeuralNetwork(object):
                             padding='SAME')
 
     @staticmethod
-    def _max_pool(x):
+    def _max_pool(x, kernel_size):
         """max pooling with kernal size 2x2 and slide by 2 pixels each time"""
         return tf.nn.max_pool(value=x,
-                              ksize=[1, 2, 2, 1],
+                              ksize=kernel_size,
                               strides=[1, 2, 2, 1],
                               padding='SAME')
 
     @staticmethod
-    def _average_pool(x):
+    def _average_pool(x, kernel_size):
         """avg pooling with kernal size 2x2 and slide by 2 pixels each time"""
         return tf.nn.avg_pool(value=x,
-                              ksize=[1, 2, 2, 1],
+                              ksize=kernel_size,
                               strides=[1, 2, 2, 1],
                               padding='SAME')
 
@@ -130,12 +130,15 @@ class ConvolutionalNeuralNetwork(object):
         elif not bn:
             return self._nonlinearity(func)(self._conv2d(input_layer, W) + b)
 
-    def add_pooling_layer(self, input_layer, mode='max'):
+    def add_pooling_layer(self,
+                          input_layer,
+                          kernel_size=[1, 2, 2, 1],
+                          mode='max'):
         """max pooling layer to reduce overfitting"""
         if mode == 'max':
-            return self._max_pool(input_layer)
+            return self._max_pool(input_layer, kernel_size)
         elif mode == 'average':
-            return self._average_pool(input_layer)
+            return self._average_pool(input_layer, kernel_size)
 
     def add_dense_layer(self, input_layer, hyperparams, func='relu', bn=True):
         """Densely Connected Layer with hyperparamters and activation. Batch
@@ -173,6 +176,7 @@ class DenseNet(ConvolutionalNeuralNetwork):
                  num_classes,
                  keep_prob=.5,
                  growth=12,
+                 bottleneck=4,
                  compression=.5):
         """growth rate refers to added channels from each Dense Block
         where the paper suggests k=40 outperforms state-of-the-art on CIFAR;
@@ -180,6 +184,7 @@ class DenseNet(ConvolutionalNeuralNetwork):
         """
         super(DenseNet, self).__init__(shape, num_classes, keep_prob)
         self._k = growth
+        self._b = bottleneck
         self._theta = compression
 
     def _composite_function(self, input_layer, hyperparams, func='relu'):
@@ -195,37 +200,43 @@ class DenseNet(ConvolutionalNeuralNetwork):
 
     @staticmethod
     def concat(tuple_of_tensors):
-        return tf.concat(concat_dim=3, values=tuple_of_tensors)
+        return tf.concat(values=tuple_of_tensors, axis=3)
 
-    def add_dense_block(self, input_layer, L, b=4):
+    def add_dense_block(self, _internal_state, L):
         """bottleneck or DenseNet-B structures yields better results hence
         builtin by default"""
         # 'Unless otherwise specified, each 1 x 1 convolution reduces input to
         # 4k feature-map in all experiements'
-        _internal_state = input_layer
-        p_bottleneck = [1, 1, None, b * self._k]
-        p_conv = [3, 3, b * self._k, self._k]
-        with tf.variable_scope('dense_block'):
-            for l in range(L):
-                p_bottleneck[2] = _internal_state.get_shape()[-1]
-                _bottleneck_state = \
-                    self._composite_function(_internal_state, p_bottleneck)
-                _new_state = \
-                    self._composite_function(_bottleneck_state, p_conv)
-                # perform concatenation along 4th dimension
-                _internal_state = self.concat([_internal_state, _new_state])
+        p_bottleneck = [[1, 1, None, self._b * self._k], [self._b * self._k]]
+        p_conv = [[3, 3, self._b * self._k, self._k], [self._k]]
+        for l in range(L):
+            p_bottleneck[0][2] = int(_internal_state.get_shape()[-1])
+            _bottleneck_state = \
+                self._composite_function(_internal_state, p_bottleneck)
+            _new_state = \
+                self._composite_function(_bottleneck_state, p_conv)
+            # perform concatenation along 4th dimension
+            _internal_state = self.concat([_internal_state, _new_state])
         # final _internal_state in shape [BATCH_SIZE, height, width, +k]
         return _internal_state
 
     def add_transition_layer(self, concatenated_input):
         """transition layer in-between dense block, with compression factor C
         builtin by default"""
-        input_chl = concatenated_input.get_shape()[-1]
+        input_chl = int(concatenated_input.get_shape()[-1])
         output_chl = int(input_chl * self._theta)
-        with tf.variable_scope('transition'):
-            W = self._weight_variable(shape=[1, 1, input_chl, output_chl])
-            b = self._bias_variable(shape=[output_chl])
+        W = self._weight_variable(shape=[1, 1, input_chl, output_chl])
+        b = self._bias_variable(shape=[output_chl])
         _internal_state = self._batch_normalize(concatenated_input)
         _internal_state = self._conv2d(_internal_state, W) + b
-        _internal_state = self._average_pool(_internal_state)
+        _internal_state = self._average_pool(_internal_state, [1, 2, 2, 1])
         return _internal_state
+
+    def add_global_average_pool(self, input_layer):
+        h = int(input_layer.get_shape()[1])
+        w = int(input_layer.get_shape()[2])
+        kernel_size = [1, h, w, 1]
+        return tf.nn.avg_pool(value=input_layer,
+                              ksize=kernel_size,
+                              strides=kernel_size,
+                              padding='SAME')
