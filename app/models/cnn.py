@@ -4,9 +4,6 @@ cnn
 
 abstraction built on top of tensorflow for constructing Convolutional Neural
 Network
-
-Densely Connected Convolutional Networks
-Huang et al 2016
 """
 
 import warnings
