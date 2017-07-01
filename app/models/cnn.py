@@ -2,14 +2,19 @@
 """
 cnn
 
-template built on top of tensorflow for constructing Convolutional Neural
+abstraction built on top of tensorflow for constructing Convolutional Neural
 Network
+
+Densely Connected Convolutional Networks
+Huang et al 2016
 """
+
+import warnings
 
 import tensorflow as tf
 
 
-class ConvolutionalNeuralNetwork:
+class ConvolutionalNeuralNetwork(object):
 
     def __init__(self, shape, num_classes, keep_prob=.5):
         """shape: [n_samples, channels, n_features]"""
@@ -55,7 +60,15 @@ class ConvolutionalNeuralNetwork:
                               padding='SAME')
 
     @staticmethod
-    def _nonlinearity(activation):
+    def _average_pool(x):
+        """avg pooling with kernal size 2x2 and slide by 2 pixels each time"""
+        return tf.nn.avg_pool(value=x,
+                              ksize=[1, 2, 2, 1],
+                              strides=[1, 2, 2, 1],
+                              padding='SAME')
+
+    @staticmethod
+    def _nonlinearity(activation='relu'):
         if activation == 'sigmoid':
             return tf.nn.sigmoid
         elif activation == 'relu':
@@ -65,8 +78,9 @@ class ConvolutionalNeuralNetwork:
 
     @property
     def x(self):
-        """feature set, using placeholder to feed data will causing loss of
-        efficiency between Python and C++"""
+        """feature set"""
+        warnings.warn("using placeholder to feed data will causing loss of"
+                      "efficiency between Python and C++", DeprecationWarning)
         return tf.placeholder(dtype=tf.float32,
                               # transform 3D shape to 4D to include batch size
                               shape=(None, ) + self._shape,
@@ -74,8 +88,9 @@ class ConvolutionalNeuralNetwork:
 
     @property
     def y_(self):
-        """ground truth, in one-hot format, using placeholder to feed data
-        will causing loss of efficiency between Python and C++"""
+        """ground truth, in one-hot format"""
+        warnings.warn("using placeholder to feed data will causing loss of"
+                      "efficiency between Python and C++", DeprecationWarning)
         return tf.placeholder(dtype=tf.float32,
                               shape=(None, self._n_class),
                               name='label')
@@ -115,9 +130,12 @@ class ConvolutionalNeuralNetwork:
         elif not bn:
             return self._nonlinearity(func)(self._conv2d(input_layer, W) + b)
 
-    def add_pooling_layer(self, input_layer):
+    def add_pooling_layer(self, input_layer, mode='max'):
         """max pooling layer to reduce overfitting"""
-        return self._max_pool(input_layer)
+        if mode == 'max':
+            return self._max_pool(input_layer)
+        elif mode == 'average':
+            return self._average_pool(input_layer)
 
     def add_dense_layer(self, input_layer, hyperparams, func='relu', bn=True):
         """Densely Connected Layer with hyperparamters and activation. Batch
@@ -144,3 +162,70 @@ class ConvolutionalNeuralNetwork:
         b = self._bias_variable(shape=[self._n_class])
 
         return tf.matmul(input_layer, W) + b
+
+
+class DenseNet(ConvolutionalNeuralNetwork):
+    """Implementation of Densely Connected Convolutional Networks by
+    Huang et al 2016"""
+
+    def __init__(self,
+                 shape,
+                 num_classes,
+                 keep_prob=.5,
+                 growth=12,
+                 compression=.5):
+        """growth rate refers to added channels from each Dense Block
+        where the paper suggests k=40 outperforms state-of-the-art on CIFAR;
+        compression improves 'model compactness' with (0, 1] compression factor
+        """
+        super(DenseNet, self).__init__(shape, num_classes, keep_prob)
+        self._k = growth
+        self._theta = compression
+
+    def _composite_function(self, input_layer, hyperparams, func='relu'):
+        """Batch Normalization, Nonlinearity, Convolutional layer with filter
+        size 3x3, with Bottleneck layer defined as filter size 1x1"""
+        W = self._weight_variable(shape=hyperparams[0])
+        b = self._bias_variable(shape=hyperparams[1])
+
+        _internal_state = self._batch_normalize(input_layer)
+        _internal_state = self._nonlinearity(func)(_internal_state)
+        _internal_state = self._conv2d(_internal_state, W)
+        return _internal_state + b
+
+    @staticmethod
+    def concat(tuple_of_tensors):
+        return tf.concat(concat_dim=3, values=tuple_of_tensors)
+
+    def add_dense_block(self, input_layer, L, b=4):
+        """bottleneck or DenseNet-B structures yields better results hence
+        builtin by default"""
+        # 'Unless otherwise specified, each 1 x 1 convolution reduces input to
+        # 4k feature-map in all experiements'
+        _internal_state = input_layer
+        p_bottleneck = [1, 1, None, b * self._k]
+        p_conv = [3, 3, b * self._k, self._k]
+        with tf.variable_scope('dense_block'):
+            for l in range(L):
+                p_bottleneck[2] = _internal_state.get_shape()[-1]
+                _bottleneck_state = \
+                    self._composite_function(_internal_state, p_bottleneck)
+                _new_state = \
+                    self._composite_function(_bottleneck_state, p_conv)
+                # perform concatenation along 4th dimension
+                _internal_state = self.concat([_internal_state, _new_state])
+        # final _internal_state in shape [BATCH_SIZE, height, width, +k]
+        return _internal_state
+
+    def add_transition_layer(self, concatenated_input):
+        """transition layer in-between dense block, with compression factor C
+        builtin by default"""
+        input_chl = concatenated_input.get_shape()[-1]
+        output_chl = int(input_chl * self._theta)
+        with tf.variable_scope('transition'):
+            W = self._weight_variable(shape=[1, 1, input_chl, output_chl])
+            b = self._bias_variable(shape=[output_chl])
+        _internal_state = self._batch_normalize(concatenated_input)
+        _internal_state = self._conv2d(_internal_state, W) + b
+        _internal_state = self._average_pool(_internal_state)
+        return _internal_state
