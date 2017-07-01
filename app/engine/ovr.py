@@ -24,110 +24,110 @@ from app.controllers import (train, save_session, predict, restore_session,
                              submit)
 
 
-def vgg_16_train(class_balance, l2_norm):
+# def vgg_16_train(class_balance, l2_norm):
+#
+#     global prediction, loss, train_step, accuracy, saver, is_train
+#
+#     conv_1 = \
+#         cnn.add_conv_layer(image_feed, [[3, 3, IMAGE_SHAPE[-1], 32], [32]])
+#     conv_2 = cnn.add_conv_layer(conv_1, [[3, 3, 32, 32], [32]])
+#     max_pool_1 = cnn.add_pooling_layer(conv_2)
+#     conv_3 = cnn.add_conv_layer(max_pool_1, [[3, 3, 32, 64], [64]])
+#     conv_4 = cnn.add_conv_layer(conv_3, [[3, 3, 64, 64], [64]])
+#     max_pool_2 = cnn.add_pooling_layer(conv_4)
+#     conv_5 = cnn.add_conv_layer(max_pool_2, [[3, 3, 64, 128], [128]])
+#     conv_6 = cnn.add_conv_layer(conv_5, [[3, 3, 128, 128], [128]])
+#     conv_7 = cnn.add_conv_layer(conv_6, [[3, 3, 128, 128], [128]])
+#     max_pool_3 = cnn.add_pooling_layer(conv_7)
+#     conv_8 = cnn.add_conv_layer(max_pool_3, [[3, 3, 128, 256], [256]])
+#     conv_9 = cnn.add_conv_layer(conv_8, [[3, 3, 256, 256], [256]])
+#     conv_10 = cnn.add_conv_layer(conv_9, [[3, 3, 256, 256], [256]])
+#     max_pool_4 = cnn.add_pooling_layer(conv_10)
+#     conv_11 = cnn.add_conv_layer(max_pool_4, [[3, 3, 256, 256], [256]])
+#     conv_12 = cnn.add_conv_layer(conv_11, [[3, 3, 256, 256], [256]])
+#     conv_13 = cnn.add_conv_layer(conv_12, [[3, 3, 256, 256], [256]])
+#     max_pool_5 = cnn.add_pooling_layer(conv_13)
+#     dense_1 = cnn.add_dense_layer(max_pool_5, [[2 * 2 * 256, 2048], [2048]])
+#     drop_out_1 = cnn.add_drop_out_layer(dense_1)
+#     dense_2 = cnn.add_dense_layer(drop_out_1, [[2048, 512], [512]])
+#     drop_out_2 = cnn.add_drop_out_layer(dense_2)
+#     logits = cnn.add_read_out_layer(drop_out_2)
+#
+#     cross_entropy = tf.nn.sigmoid_cross_entropy_with_logits(logits=logits,
+#                                                             labels=label_feed)
+#
+#     # Explicit logistic log-loss function
+#     # cross_entropy = - (y_ * tf.log(1 / (1 + tf.exp(-logits)) + 1e-9) +
+#     #                  (1 - y_) * tf.log(1 - 1 / (1 + tf.exp(-logits)) + 1e-9))
+#
+#     if class_balance:
+#         class_weights = tf.constant([[TAGS_WEIGHTINGS]],
+#                                     shape=[1, cnn._n_class])
+#         cross_entropy *= class_weights
+#
+#     if l2_norm:
+#         weights2norm = [var for var in tf.trainable_variables()
+#                         if var.name.startswith(('weight', 'bias'))][-32:]
+#         regularizers = tf.add_n([tf.nn.l2_loss(var) for var in weights2norm])
+#         cross_entropy += BETA * regularizers
+#
+#     for n in tf.global_variables():
+#         print(n)
+#
+#     loss = tf.reduce_mean(cross_entropy)
+#
+#     update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
+#     with tf.control_dependencies(update_ops):
+#         train_step = tf.train.RMSPropOptimizer(learning_rate=ALPHA,
+#                                                decay=0.7,
+#                                                momentum=.5,
+#                                                epsilon=1e-10,
+#                                                use_locking=False,
+#                                                centered=False).minimize(loss)
+#     prediction = tf.nn.sigmoid(logits)
+#     correct_pred = tf.equal(tf.cast(prediction > TAGS_THRESHOLDS, tf.int8),
+#                             tf.cast(label_feed, tf.int8))
+#     all_correct_pred = tf.reduce_min(tf.cast(correct_pred, tf.float32), 1)
+#     accuracy = tf.reduce_mean(all_correct_pred)
+#
+#     saver = tf.train.Saver(max_to_keep=5, var_list=tf.global_variables())
+#
 
-    global prediction, loss, train_step, accuracy, saver, is_train
-
-    conv_1 = \
-        cnn.add_conv_layer(image_feed, [[3, 3, IMAGE_SHAPE[-1], 32], [32]])
-    conv_2 = cnn.add_conv_layer(conv_1, [[3, 3, 32, 32], [32]])
-    max_pool_1 = cnn.add_pooling_layer(conv_2)
-    conv_3 = cnn.add_conv_layer(max_pool_1, [[3, 3, 32, 64], [64]])
-    conv_4 = cnn.add_conv_layer(conv_3, [[3, 3, 64, 64], [64]])
-    max_pool_2 = cnn.add_pooling_layer(conv_4)
-    conv_5 = cnn.add_conv_layer(max_pool_2, [[3, 3, 64, 128], [128]])
-    conv_6 = cnn.add_conv_layer(conv_5, [[3, 3, 128, 128], [128]])
-    conv_7 = cnn.add_conv_layer(conv_6, [[3, 3, 128, 128], [128]])
-    max_pool_3 = cnn.add_pooling_layer(conv_7)
-    conv_8 = cnn.add_conv_layer(max_pool_3, [[3, 3, 128, 256], [256]])
-    conv_9 = cnn.add_conv_layer(conv_8, [[3, 3, 256, 256], [256]])
-    conv_10 = cnn.add_conv_layer(conv_9, [[3, 3, 256, 256], [256]])
-    max_pool_4 = cnn.add_pooling_layer(conv_10)
-    conv_11 = cnn.add_conv_layer(max_pool_4, [[3, 3, 256, 256], [256]])
-    conv_12 = cnn.add_conv_layer(conv_11, [[3, 3, 256, 256], [256]])
-    conv_13 = cnn.add_conv_layer(conv_12, [[3, 3, 256, 256], [256]])
-    max_pool_5 = cnn.add_pooling_layer(conv_13)
-    dense_1 = cnn.add_dense_layer(max_pool_5, [[2 * 2 * 256, 2048], [2048]])
-    drop_out_1 = cnn.add_drop_out_layer(dense_1)
-    dense_2 = cnn.add_dense_layer(drop_out_1, [[2048, 512], [512]])
-    drop_out_2 = cnn.add_drop_out_layer(dense_2)
-    logits = cnn.add_read_out_layer(drop_out_2)
-
-    cross_entropy = tf.nn.sigmoid_cross_entropy_with_logits(logits=logits,
-                                                            labels=label_feed)
-
-    # Explicit logistic log-loss function
-    # cross_entropy = - (y_ * tf.log(1 / (1 + tf.exp(-logits)) + 1e-9) +
-    #                  (1 - y_) * tf.log(1 - 1 / (1 + tf.exp(-logits)) + 1e-9))
-
-    if class_balance:
-        class_weights = tf.constant([[TAGS_WEIGHTINGS]],
-                                    shape=[1, cnn._n_class])
-        cross_entropy *= class_weights
-
-    if l2_norm:
-        weights2norm = [var for var in tf.trainable_variables()
-                        if var.name.startswith(('weight', 'bias'))][-32:]
-        regularizers = tf.add_n([tf.nn.l2_loss(var) for var in weights2norm])
-        cross_entropy += BETA * regularizers
-
-    for n in tf.global_variables():
-        print(n)
-
-    loss = tf.reduce_mean(cross_entropy)
-
-    update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
-    with tf.control_dependencies(update_ops):
-        train_step = tf.train.RMSPropOptimizer(learning_rate=ALPHA,
-                                               decay=0.7,
-                                               momentum=.5,
-                                               epsilon=1e-10,
-                                               use_locking=False,
-                                               centered=False).minimize(loss)
-    prediction = tf.nn.sigmoid(logits)
-    correct_pred = tf.equal(tf.cast(prediction > TAGS_THRESHOLDS, tf.int8),
-                            tf.cast(label_feed, tf.int8))
-    all_correct_pred = tf.reduce_min(tf.cast(correct_pred, tf.float32), 1)
-    accuracy = tf.reduce_mean(all_correct_pred)
-
-    saver = tf.train.Saver(max_to_keep=5, var_list=tf.global_variables())
+# def vgg_16_eval():
+#
+#     global prediction, saver
+#
+#     conv_1 = \
+#         cnn.add_conv_layer(image_feed, [[3, 3, IMAGE_SHAPE[-1], 32], [32]])
+#     conv_2 = cnn.add_conv_layer(conv_1, [[3, 3, 32, 32], [32]])
+#     max_pool_1 = cnn.add_pooling_layer(conv_2)
+#     conv_3 = cnn.add_conv_layer(max_pool_1, [[3, 3, 32, 64], [64]])
+#     conv_4 = cnn.add_conv_layer(conv_3, [[3, 3, 64, 64], [64]])
+#     max_pool_2 = cnn.add_pooling_layer(conv_4)
+#     conv_5 = cnn.add_conv_layer(max_pool_2, [[3, 3, 64, 128], [128]])
+#     conv_6 = cnn.add_conv_layer(conv_5, [[3, 3, 128, 128], [128]])
+#     conv_7 = cnn.add_conv_layer(conv_6, [[3, 3, 128, 128], [128]])
+#     max_pool_3 = cnn.add_pooling_layer(conv_7)
+#     conv_8 = cnn.add_conv_layer(max_pool_3, [[3, 3, 128, 256], [256]])
+#     conv_9 = cnn.add_conv_layer(conv_8, [[3, 3, 256, 256], [256]])
+#     conv_10 = cnn.add_conv_layer(conv_9, [[3, 3, 256, 256], [256]])
+#     max_pool_4 = cnn.add_pooling_layer(conv_10)
+#     conv_11 = cnn.add_conv_layer(max_pool_4, [[3, 3, 256, 256], [256]])
+#     conv_12 = cnn.add_conv_layer(conv_11, [[3, 3, 256, 256], [256]])
+#     conv_13 = cnn.add_conv_layer(conv_12, [[3, 3, 256, 256], [256]])
+#     max_pool_5 = cnn.add_pooling_layer(conv_13)
+#     dense_1 = cnn.add_dense_layer(max_pool_5, [[2 * 2 * 256, 2048], [2048]])
+#     drop_out_1 = cnn.add_drop_out_layer(dense_1)
+#     dense_2 = cnn.add_dense_layer(drop_out_1, [[2048, 512], [512]])
+#     drop_out_2 = cnn.add_drop_out_layer(dense_2)
+#     logits = cnn.add_read_out_layer(drop_out_2)
+#     prediction = tf.nn.sigmoid(logits)
+#
+#     # without saver object restore doesn't actually work.
+#     saver = tf.train.Saver(max_to_keep=5, var_list=tf.global_variables())
 
 
-def vgg_16_eval():
-
-    global prediction, saver
-
-    conv_1 = \
-        cnn.add_conv_layer(image_feed, [[3, 3, IMAGE_SHAPE[-1], 32], [32]])
-    conv_2 = cnn.add_conv_layer(conv_1, [[3, 3, 32, 32], [32]])
-    max_pool_1 = cnn.add_pooling_layer(conv_2)
-    conv_3 = cnn.add_conv_layer(max_pool_1, [[3, 3, 32, 64], [64]])
-    conv_4 = cnn.add_conv_layer(conv_3, [[3, 3, 64, 64], [64]])
-    max_pool_2 = cnn.add_pooling_layer(conv_4)
-    conv_5 = cnn.add_conv_layer(max_pool_2, [[3, 3, 64, 128], [128]])
-    conv_6 = cnn.add_conv_layer(conv_5, [[3, 3, 128, 128], [128]])
-    conv_7 = cnn.add_conv_layer(conv_6, [[3, 3, 128, 128], [128]])
-    max_pool_3 = cnn.add_pooling_layer(conv_7)
-    conv_8 = cnn.add_conv_layer(max_pool_3, [[3, 3, 128, 256], [256]])
-    conv_9 = cnn.add_conv_layer(conv_8, [[3, 3, 256, 256], [256]])
-    conv_10 = cnn.add_conv_layer(conv_9, [[3, 3, 256, 256], [256]])
-    max_pool_4 = cnn.add_pooling_layer(conv_10)
-    conv_11 = cnn.add_conv_layer(max_pool_4, [[3, 3, 256, 256], [256]])
-    conv_12 = cnn.add_conv_layer(conv_11, [[3, 3, 256, 256], [256]])
-    conv_13 = cnn.add_conv_layer(conv_12, [[3, 3, 256, 256], [256]])
-    max_pool_5 = cnn.add_pooling_layer(conv_13)
-    dense_1 = cnn.add_dense_layer(max_pool_5, [[2 * 2 * 256, 2048], [2048]])
-    drop_out_1 = cnn.add_drop_out_layer(dense_1)
-    dense_2 = cnn.add_dense_layer(drop_out_1, [[2048, 512], [512]])
-    drop_out_2 = cnn.add_drop_out_layer(dense_2)
-    logits = cnn.add_read_out_layer(drop_out_2)
-    prediction = tf.nn.sigmoid(logits)
-
-    # without saver object restore doesn't actually work.
-    saver = tf.train.Saver(max_to_keep=5, var_list=tf.global_variables())
-
-
-def densenet_161(class_balance=False, l2_norm=False):
+def densenet(class_balance=False, l2_norm=False):
     """DenseNet 161 outperforms state-of-the-art on benchmarks"""
     global prediction, loss, train_step, accuracy, saver, is_train
 
@@ -140,17 +140,17 @@ def densenet_161(class_balance=False, l2_norm=False):
     transition_layer_1 = dn.add_transition_layer(dense_block_1)
     dense_block_2 = dn.add_dense_block(transition_layer_1, L=12)
     transition_layer_2 = dn.add_transition_layer(dense_block_2)
-    dense_block_3 = dn.add_dense_block(transition_layer_2, L=36)
+    dense_block_3 = dn.add_dense_block(transition_layer_2, L=24)
     transition_layer_3 = dn.add_transition_layer(dense_block_3)
-    dense_block_4 = dn.add_dense_block(transition_layer_3, L=24)
+    dense_block_4 = dn.add_dense_block(transition_layer_3, L=16)
     global_pool = dn.add_global_average_pool(dense_block_4)
-    dense_layer_1 = dn.add_dense_layer(global_pool, [[2208, 1000], [1000]],
+    dim = int(global_pool.get_shape()[-1])
+    dense_layer_1 = dn.add_dense_layer(global_pool, [[dim, 1000], [1000]],
                                        bn=False)
     logits = dn.add_read_out_layer(dense_layer_1)
 
     cross_entropy = tf.nn.sigmoid_cross_entropy_with_logits(logits=logits,
                                                             labels=label_feed)
-
     # Explicit logistic log-loss function
     # cross_entropy = - (y_ * tf.log(1 / (1 + tf.exp(-logits)) + 1e-9) +
     #                  (1 - y_) * tf.log(1 - 1 / (1 + tf.exp(-logits)) + 1e-9))
@@ -188,7 +188,7 @@ def densenet_161(class_balance=False, l2_norm=False):
     saver = tf.train.Saver(max_to_keep=5, var_list=tf.global_variables())
 
 
-def densenet_161_eval():
+def densenet_eval():
     """DenseNet 161 outperforms state-of-the-art on benchmarks"""
     global prediction, saver
     init_conv = dn.add_conv_layer(
@@ -200,16 +200,15 @@ def densenet_161_eval():
     transition_layer_1 = dn.add_transition_layer(dense_block_1)
     dense_block_2 = dn.add_dense_block(transition_layer_1, L=12)
     transition_layer_2 = dn.add_transition_layer(dense_block_2)
-    dense_block_3 = dn.add_dense_block(transition_layer_2, L=36)
+    dense_block_3 = dn.add_dense_block(transition_layer_2, L=24)
     transition_layer_3 = dn.add_transition_layer(dense_block_3)
-    dense_block_4 = dn.add_dense_block(transition_layer_3, L=24)
+    dense_block_4 = dn.add_dense_block(transition_layer_3, L=16)
     global_pool = dn.add_global_average_pool(dense_block_4)
-    dense_layer_1 = dn.add_dense_layer(global_pool, [[2208, 1000], [1000]],
+    dim = int(global_pool.get_shape()[-1])
+    dense_layer_1 = dn.add_dense_layer(global_pool, [[dim, 1000], [1000]],
                                        bn=False)
-
     logits = dn.add_read_out_layer(dense_layer_1)
     prediction = tf.nn.sigmoid(logits)
-
     saver = tf.train.Saver(max_to_keep=5, var_list=tf.global_variables())
 
 
@@ -254,8 +253,9 @@ for iteration in range(ENSEMBLE):
             dn = DenseNet(IMAGE_SHAPE,
                           num_classes=17,
                           keep_prob=KEEP_RATE,
-                          growth=48,
-                          bottleneck=4)
+                          growth=12,
+                          bottleneck=4,
+                          compression=.5)
             is_train = dn.is_train
             # !!! inefficient feeding of data despite 90%+ GPU utilisation
             image_feed = tf.cond(is_train,
@@ -266,7 +266,7 @@ for iteration in range(ENSEMBLE):
                                  lambda: valid_label_batch)
 
             with tf.device('/gpu:0'):
-                densenet_161(class_balance=False, l2_norm=False)
+                densenet(class_balance=False, l2_norm=False)
                 # vgg_16_train(class_balance=False, l2_norm=False)
 
             init_op = tf.group(tf.local_variables_initializer(),
@@ -298,11 +298,11 @@ for iteration in range(ENSEMBLE):
                           num_classes=17,
                           keep_prob=KEEP_RATE,
                           growth=12,
-                          bottleneck=4)
-
+                          bottleneck=4,
+                          compression=.5)
             with tf.device('/gpu:0'):
                 # vgg_16_eval()
-                densenet_161_eval()
+                densenet_eval()
 
             init_op = tf.group(tf.local_variables_initializer(),
                                tf.global_variables_initializer())
