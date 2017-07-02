@@ -281,6 +281,7 @@ for iteration in range(ENSEMBLE):
             train(MAX_STEPS, sess, is_train, prediction, label_feed,
                   train_step, accuracy, loss, TAGS_THRESHOLDS)
             save_session(sess, path=MODEL_PATH, sav=saver)
+        del sess
 
     if EVAL:
         tf.reset_default_graph()
@@ -315,7 +316,10 @@ for iteration in range(ENSEMBLE):
             restore_session(sess, MODEL_PATH)
             probs = predict(sess, prediction)
             ensemble_probs.append(probs)
+        del sess
 
 if EVAL:
     final_probs = np.mean(ensemble_probs, axis=0)
     submit(final_probs, OUTPUT_PATH, TAGS, TAGS_THRESHOLDS)
+
+del sess
