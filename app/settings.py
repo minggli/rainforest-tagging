@@ -22,7 +22,7 @@ KEEP_RATE = .8
 # ALPHA *= 5
 
 # with data augmentation turned on, need long training steps
-AUGMENT = False
+AUGMENT = True
 if AUGMENT:
     MAX_STEPS *= 2
 
