@@ -129,12 +129,12 @@ def decode_transform(input_queue,
     image_queue = tf.read_file(input_queue[0])
 
     # !!! decode_jpeg only accepts RGB jpg but not raising error for CMYK
-    # original_image = tf.image.decode_jpeg(contents=image_queue, channels=0)
+    original_image = tf.image.decode_jpeg(contents=image_queue, channels=0)
 
-    original_image = tf.cast(tf.image.decode_png(contents=image_queue,
-                                                 channels=0,
-                                                 dtype=tf.uint16),
-                             tf.int16)
+    # original_image = tf.cast(tf.image.decode_png(contents=image_queue,
+    #                                              channels=0,
+    #                                              dtype=tf.uint16),
+    #                          tf.int16)
     # crop larger images to 256*256, this func doesn't 'resize'.
     cropped_img = tf.image.resize_image_with_crop_or_pad(
                                 image=original_image,
@@ -150,12 +150,12 @@ def decode_transform(input_queue,
         img = tf.image.random_flip_left_right(img)
         img = tf.image.rot90(img, k=np.random.randint(4))
         # img = tf.image.random_brightness(img, max_delta=30)
-        img = tf.image.random_contrast(img, lower=.8, upper=1.2)
-        try:
-            # saturation only works for 3-channel RGB images
-            img = tf.image.random_saturation(img, lower=.4, upper=2)
-        except ValueError:
-            pass
+        # img = tf.image.random_contrast(img, lower=.9, upper=1.1)
+        # try:
+        #     # saturation only works for 3-channel RGB images
+        #     # img = tf.image.random_saturation(img, lower=.4, upper=2)
+        # except ValueError:
+        #     pass
 
         img.set_shape(shape)
 

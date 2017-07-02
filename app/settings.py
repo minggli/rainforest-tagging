@@ -5,24 +5,24 @@ MODEL_PATH = './trained_models/'
 IMAGE_PATH = './data/'
 OUTPUT_PATH = './output/'
 DEFAULT_BUCKET = 'rainforest-satellite-images'
-EXT = ('.png', '.csv')
-IMAGE_SHAPE = (64, 64, 4)
-BATCH_SIZE = 64
+EXT = ('.jpg', '.csv')
+IMAGE_SHAPE = (256, 256, 3)
+BATCH_SIZE = 128
 N_THREADS = 4
 # roughly 10 epochs of training data
 MAX_STEPS = 5000
-EPOCHS = 5
+EPOCHS = 3
 
 ALPHA = 5e-4
 BETA = 1e-2
-VALID_SIZE = 0.001
-KEEP_RATE = 1.0
+VALID_SIZE = 0.1
+KEEP_RATE = .8
 
 # Ioffe and Szegedy 2015 suggests 5x learning rate with batch normalization
-ALPHA *= 5
+# ALPHA *= 5
 
 # with data augmentation turned on, need long training steps
-AUGMENT = True
+AUGMENT = False
 if AUGMENT:
     MAX_STEPS *= 2
 
