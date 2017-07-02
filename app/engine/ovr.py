@@ -120,6 +120,7 @@ def vgg_16_eval():
     dense_2 = cnn.add_dense_layer(drop_out_1, [[2048, 512], [512]])
     drop_out_2 = cnn.add_drop_out_layer(dense_2)
     logits = cnn.add_read_out_layer(drop_out_2)
+
     prediction = tf.nn.sigmoid(logits)
 
     # without saver object restore doesn't actually work.
@@ -281,7 +282,6 @@ for iteration in range(ENSEMBLE):
             train(MAX_STEPS, sess, is_train, prediction, label_feed,
                   train_step, accuracy, loss, TAGS_THRESHOLDS)
             save_session(sess, path=MODEL_PATH, sav=saver)
-        del sess
 
     if EVAL:
         tf.reset_default_graph()
@@ -298,7 +298,7 @@ for iteration in range(ENSEMBLE):
 
             cnn = ConvolutionalNeuralNetwork(IMAGE_SHAPE, 17,
                                              keep_prob=KEEP_RATE)
-            # image_feed = test_image_batch
+            image_feed = test_image_batch
             # dn = DenseNet(IMAGE_SHAPE,
             #               num_classes=17,
             #               keep_prob=KEEP_RATE,
@@ -316,10 +316,7 @@ for iteration in range(ENSEMBLE):
             restore_session(sess, MODEL_PATH)
             probs = predict(sess, prediction)
             ensemble_probs.append(probs)
-        del sess
 
 if EVAL:
     final_probs = np.mean(ensemble_probs, axis=0)
     submit(final_probs, OUTPUT_PATH, TAGS, TAGS_THRESHOLDS)
-
-del sess
