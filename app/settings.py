@@ -19,7 +19,7 @@ VALID_SIZE = 0.1
 KEEP_RATE = .8
 
 # Ioffe and Szegedy 2015 suggests 5x learning rate with batch normalization
-# ALPHA *= 5
+ALPHA *= 5
 
 # with data augmentation turned on, need long training steps
 AUGMENT = True
