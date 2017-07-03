@@ -11,15 +11,15 @@ import warnings
 import tensorflow as tf
 
 
-class ConvolutionalNeuralNetwork(object):
+class _BaseCNN(object):
 
-    def __init__(self, shape, num_classes, keep_prob=.5):
+    def __init__(self, shape, num_classes, keep_prob):
         """shape: [n_samples, channels, n_features]"""
         self._shape = shape
         self._n_class = num_classes
         self._keep_rate = keep_prob
-
         self.is_train = self._is_train
+
         self.keep_prob = self._keep_prob
 
     @staticmethod
@@ -76,8 +76,9 @@ class ConvolutionalNeuralNetwork(object):
     @property
     def x(self):
         """feature set"""
-        warnings.warn("using placeholder to feed data will causing loss of"
-                      "efficiency between Python and C++", DeprecationWarning)
+        warnings.warn("using placeholder to feed data will causing low "
+                      "efficiency between Python and C++ interface",
+                      DeprecationWarning)
         return tf.placeholder(dtype=tf.float32,
                               # transform 3D shape to 4D to include batch size
                               shape=(None, ) + self._shape,
@@ -86,8 +87,9 @@ class ConvolutionalNeuralNetwork(object):
     @property
     def y_(self):
         """ground truth, in one-hot format"""
-        warnings.warn("using placeholder to feed data will causing loss of"
-                      "efficiency between Python and C++", DeprecationWarning)
+        warnings.warn("using placeholder to feed data will causing low "
+                      "efficiency between Python and C++ interface",
+                      DeprecationWarning)
         return tf.placeholder(dtype=tf.float32,
                               shape=(None, self._n_class),
                               name='label')
@@ -100,7 +102,7 @@ class ConvolutionalNeuralNetwork(object):
 
     @property
     def _is_train(self):
-        """indicates if network is under training mode."""
+        """indicates if network is under training mode, default False."""
         return tf.placeholder_with_default(input=False,
                                            shape=[],
                                            name='is_train')
@@ -114,6 +116,13 @@ class ConvolutionalNeuralNetwork(object):
                                             scale=True,
                                             is_training=self.is_train,
                                             reuse=reuse_flag)
+
+
+class ConvolutionalNeuralNetwork(_BaseCNN):
+    def __init__(self, shape, num_classes, keep_prob=.5):
+        super(ConvolutionalNeuralNetwork, self).__init__(shape,
+                                                         num_classes,
+                                                         keep_prob)
 
     def add_conv_layer(self, input_layer, hyperparams, func='relu', bn=True):
         """Convolution Layer with hyperparamters and activation and batch
@@ -164,7 +173,7 @@ class ConvolutionalNeuralNetwork(object):
         return tf.matmul(input_layer, W) + b
 
 
-class DenseNet(ConvolutionalNeuralNetwork):
+class DenseNet(_BaseCNN):
     """Implementation of Densely Connected Convolutional Networks by
     Huang et al 2016"""
 
