@@ -171,7 +171,7 @@ class BasicCNN(_BaseCNN):
         return tf.matmul(input_layer, W) + b
 
 
-class DenseNet(_BaseCNN):
+class DenseNet(BasicCNN):
     """Implementation of Densely Connected Convolutional Networks by
     Huang et al 2016"""
 
