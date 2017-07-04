@@ -136,13 +136,13 @@ def densenet(class_balance=False, l2_norm=False):
                             [[7, 7, IMAGE_SHAPE[-1], 2 * dn._k], [2 * dn._k]],
                             bn=False)
     init_pool = dn.add_pooling_layer(init_conv, kernel_size=[1, 3, 3, 1])
-    dense_block_1 = dn.add_dense_block(init_pool, L=6)
+    dense_block_1 = dn.add_dense_block(init_pool, L=3)
     transition_layer_1 = dn.add_transition_layer(dense_block_1)
-    dense_block_2 = dn.add_dense_block(transition_layer_1, L=12)
+    dense_block_2 = dn.add_dense_block(transition_layer_1, L=6)
     transition_layer_2 = dn.add_transition_layer(dense_block_2)
-    dense_block_3 = dn.add_dense_block(transition_layer_2, L=24)
+    dense_block_3 = dn.add_dense_block(transition_layer_2, L=18)
     transition_layer_3 = dn.add_transition_layer(dense_block_3)
-    dense_block_4 = dn.add_dense_block(transition_layer_3, L=16)
+    dense_block_4 = dn.add_dense_block(transition_layer_3, L=12)
     global_pool = dn.add_global_average_pool(dense_block_4)
     dim = int(global_pool.get_shape()[-1])
     dense_layer_1 = dn.add_dense_layer(global_pool, [[dim, 1000], [1000]],
@@ -192,18 +192,19 @@ def densenet(class_balance=False, l2_norm=False):
 def densenet_eval():
     """DenseNet-BC 121"""
     global prediction, saver
+
     init_conv = dn.add_conv_layer(
                             image_feed,
                             [[7, 7, IMAGE_SHAPE[-1], 2 * dn._k], [2 * dn._k]],
                             bn=False)
     init_pool = dn.add_pooling_layer(init_conv, kernel_size=[1, 3, 3, 1])
-    dense_block_1 = dn.add_dense_block(init_pool, L=6)
+    dense_block_1 = dn.add_dense_block(init_pool, L=3)
     transition_layer_1 = dn.add_transition_layer(dense_block_1)
-    dense_block_2 = dn.add_dense_block(transition_layer_1, L=12)
+    dense_block_2 = dn.add_dense_block(transition_layer_1, L=6)
     transition_layer_2 = dn.add_transition_layer(dense_block_2)
-    dense_block_3 = dn.add_dense_block(transition_layer_2, L=24)
+    dense_block_3 = dn.add_dense_block(transition_layer_2, L=18)
     transition_layer_3 = dn.add_transition_layer(dense_block_3)
-    dense_block_4 = dn.add_dense_block(transition_layer_3, L=16)
+    dense_block_4 = dn.add_dense_block(transition_layer_3, L=12)
     global_pool = dn.add_global_average_pool(dense_block_4)
     dim = int(global_pool.get_shape()[-1])
     dense_layer_1 = dn.add_dense_layer(global_pool, [[dim, 1000], [1000]],
@@ -255,7 +256,7 @@ for iteration in range(ENSEMBLE):
             dn = DenseNet(IMAGE_SHAPE,
                           num_classes=17,
                           keep_prob=KEEP_RATE,
-                          growth=12,
+                          growth=48,
                           bottleneck=4,
                           compression=.5)
             is_train = dn.is_train
@@ -301,7 +302,7 @@ for iteration in range(ENSEMBLE):
             dn = DenseNet(IMAGE_SHAPE,
                           num_classes=17,
                           keep_prob=KEEP_RATE,
-                          growth=12,
+                          growth=48,
                           bottleneck=4,
                           compression=.5)
             with tf.device('/gpu:0'):
