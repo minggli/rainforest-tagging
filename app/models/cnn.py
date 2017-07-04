@@ -118,11 +118,9 @@ class _BaseCNN(object):
                                             reuse=reuse_flag)
 
 
-class ConvolutionalNeuralNetwork(_BaseCNN):
+class BasicCNN(_BaseCNN):
     def __init__(self, shape, num_classes, keep_prob=.5):
-        super(ConvolutionalNeuralNetwork, self).__init__(shape,
-                                                         num_classes,
-                                                         keep_prob)
+        super(BasicCNN, self).__init__(shape, num_classes, keep_prob)
 
     def add_conv_layer(self, input_layer, hyperparams, func='relu', bn=True):
         """Convolution Layer with hyperparamters and activation and batch
@@ -184,9 +182,16 @@ class DenseNet(_BaseCNN):
                  growth=12,
                  bottleneck=4,
                  compression=.5):
-        """growth rate refers to added channels from each Dense Block
-        where the paper suggests k=40 outperforms state-of-the-art on CIFAR;
-        compression improves 'model compactness' with (0, 1] compression factor
+        """
+        Growth rate (denoted as k) refers to added channels from each
+        Dense Block where the paper suggests k=12 as default and indicates that
+        k=40 outperforms previous state-of-the-art on CIFAR;
+
+        Bottleneck (denoted as b) refers to additional 1x1 composite function
+        within each Dense Block to cap number of input channels by b * k
+
+        Compression (denoted as theta) improves 'model compactness' with (0, 1]
+        compression factor, applied at transition layer to reduce channels
         """
         super(DenseNet, self).__init__(shape, num_classes, keep_prob)
         self._k = growth
@@ -194,8 +199,8 @@ class DenseNet(_BaseCNN):
         self._theta = compression
 
     def _composite_function(self, input_layer, hyperparams, func='relu'):
-        """Batch Normalization, Nonlinearity, Convolutional layer with filter
-        size 3x3, with Bottleneck layer defined as filter size 1x1"""
+        """Standard Composite Function H, consisting of Batch Normalization,
+        Nonlinearity (e.g. RELU), Convolution with filter size 3x3 or 1x1."""
         W = self._weight_variable(shape=hyperparams[0])
         b = self._bias_variable(shape=hyperparams[1])
 
@@ -209,26 +214,32 @@ class DenseNet(_BaseCNN):
         return tf.concat(values=tuple_of_tensors, axis=3)
 
     def add_dense_block(self, _internal_state, L):
-        """bottleneck or DenseNet-B structures yields better results hence
-        builtin by default"""
-        # 'Unless otherwise specified, each 1 x 1 convolution reduces input to
-        # 4k feature-map in all experiements'
+        """Core element of DensetNet. Dense Block consists of densely connected
+        composite functions with each taking in all previous outputs instead of
+        just the previous layer within the Dense Block.
+
+        Bottleneck and Compression (i.e.) DenseNet-BC
+        structure yields superior results against benchmarks
+
+        L denotes the total number of composite functions and must be >= 1."""
+
         p_bottleneck = [[1, 1, None, self._b * self._k], [self._b * self._k]]
         p_conv = [[3, 3, self._b * self._k, self._k], [self._k]]
         for l in range(L):
+            # update bottleneck layer param to reflect growth
             p_bottleneck[0][2] = int(_internal_state.get_shape()[-1])
             _bottleneck_state = \
                 self._composite_function(_internal_state, p_bottleneck)
             _new_state = \
                 self._composite_function(_bottleneck_state, p_conv)
-            # perform concatenation along 4th dimension
+            # !!! perform concatenation along 4th dimension
             _internal_state = self.concat([_internal_state, _new_state])
-        # final _internal_state in shape [BATCH_SIZE, height, width, +k]
+        # final _internal_state in shape [BATCH_SIZE, height, width, +=k]
         return _internal_state
 
     def add_transition_layer(self, concatenated_input):
         """transition layer in-between dense block, with compression factor C
-        builtin by default"""
+        builtin by default so DenseNet-C is implemented"""
         input_chl = int(concatenated_input.get_shape()[-1])
         output_chl = int(input_chl * self._theta)
         W = self._weight_variable(shape=[1, 1, input_chl, output_chl])

@@ -17,7 +17,7 @@ import tensorflow as tf
 import numpy as np
 
 from __main__ import EVAL, TRAIN, ENSEMBLE
-from app.models.cnn import ConvolutionalNeuralNetwork, DenseNet
+from app.models.cnn import BasicCNN, DenseNet
 from app.settings import (IMAGE_PATH, IMAGE_SHAPE, BATCH_SIZE, MODEL_PATH,
                           MAX_STEPS, ALPHA, BETA, TAGS, TAGS_WEIGHTINGS, EXT,
                           TAGS_THRESHOLDS, VALID_SIZE, KEEP_RATE, OUTPUT_PATH,
@@ -249,11 +249,10 @@ for iteration in range(ENSEMBLE):
                                                         shuffle=True,
                                                         threads=N_THREADS)
 
-            cnn = ConvolutionalNeuralNetwork(IMAGE_SHAPE, 17,
-                                             keep_prob=KEEP_RATE)
+            cnn = BasicCNN(IMAGE_SHAPE, 17, keep_prob=KEEP_RATE)
             is_train = cnn.is_train
 
-            # dn = DenseNet(IMAGE_SHAPE,
+            # dn = DenseNets(IMAGE_SHAPE,
             #               num_classes=17,
             #               keep_prob=KEEP_RATE,
             #               growth=32,
@@ -296,10 +295,9 @@ for iteration in range(ENSEMBLE):
                                                         augmentation=AUGMENT,
                                                         shuffle=False)
 
-            cnn = ConvolutionalNeuralNetwork(IMAGE_SHAPE, 17,
-                                             keep_prob=KEEP_RATE)
+            cnn = BasicCNN(IMAGE_SHAPE, 17, keep_prob=KEEP_RATE)
             image_feed = test_image_batch
-            # dn = DenseNet(IMAGE_SHAPE,
+            # dn = DenseNets(IMAGE_SHAPE,
             #               num_classes=17,
             #               keep_prob=KEEP_RATE,
             #               growth=32,
