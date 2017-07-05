@@ -91,7 +91,7 @@ from app.controllers import (train, save_session, predict, restore_session,
 #
 #     saver = tf.train.Saver(max_to_keep=5, var_list=tf.global_variables())
 
-#
+
 # def vgg_16_eval():
 #
 #     global prediction, saver
@@ -140,9 +140,9 @@ def densenet(class_balance=False, l2_norm=False):
     transition_layer_1 = dn.add_transition_layer(dense_block_1)
     dense_block_2 = dn.add_dense_block(transition_layer_1, L=6)
     transition_layer_2 = dn.add_transition_layer(dense_block_2)
-    dense_block_3 = dn.add_dense_block(transition_layer_2, L=18)
+    dense_block_3 = dn.add_dense_block(transition_layer_2, L=12)
     transition_layer_3 = dn.add_transition_layer(dense_block_3)
-    dense_block_4 = dn.add_dense_block(transition_layer_3, L=12)
+    dense_block_4 = dn.add_dense_block(transition_layer_3, L=8)
     global_pool = dn.add_global_average_pool(dense_block_4)
     dim = int(global_pool.get_shape()[-1])
     dense_layer_1 = dn.add_dense_layer(global_pool, [[dim, 1000], [1000]],
@@ -202,9 +202,9 @@ def densenet_eval():
     transition_layer_1 = dn.add_transition_layer(dense_block_1)
     dense_block_2 = dn.add_dense_block(transition_layer_1, L=6)
     transition_layer_2 = dn.add_transition_layer(dense_block_2)
-    dense_block_3 = dn.add_dense_block(transition_layer_2, L=18)
+    dense_block_3 = dn.add_dense_block(transition_layer_2, L=12)
     transition_layer_3 = dn.add_transition_layer(dense_block_3)
-    dense_block_4 = dn.add_dense_block(transition_layer_3, L=12)
+    dense_block_4 = dn.add_dense_block(transition_layer_3, L=8)
     global_pool = dn.add_global_average_pool(dense_block_4)
     dim = int(global_pool.get_shape()[-1])
     dense_layer_1 = dn.add_dense_layer(global_pool, [[dim, 1000], [1000]],
@@ -256,7 +256,7 @@ for iteration in range(ENSEMBLE):
             dn = DenseNet(IMAGE_SHAPE,
                           num_classes=17,
                           keep_prob=KEEP_RATE,
-                          growth=24,
+                          growth=12,
                           bottleneck=4,
                           compression=.5)
             is_train = dn.is_train
@@ -268,8 +268,6 @@ for iteration in range(ENSEMBLE):
             label_feed = tf.cond(is_train,
                                  lambda: train_label_batch,
                                  lambda: valid_label_batch)
-            # image_feed = train_image_batch
-            # label_feed = train_label_batch
 
             with tf.device('/gpu:0'):
                 densenet(class_balance=False, l2_norm=False)
@@ -296,13 +294,13 @@ for iteration in range(ENSEMBLE):
                                                         batch_size=BATCH_SIZE,
                                                         augmentation=AUGMENT,
                                                         shuffle=False)
+            image_feed = test_image_batch
 
             # cnn = BasicCNN(IMAGE_SHAPE, 17, keep_prob=KEEP_RATE)
-            image_feed = test_image_batch
             dn = DenseNet(IMAGE_SHAPE,
                           num_classes=17,
                           keep_prob=KEEP_RATE,
-                          growth=24,
+                          growth=12,
                           bottleneck=4,
                           compression=.5)
             with tf.device('/gpu:0'):
