@@ -256,7 +256,7 @@ for iteration in range(ENSEMBLE):
             dn = DenseNet(IMAGE_SHAPE,
                           num_classes=17,
                           keep_prob=KEEP_RATE,
-                          growth=32,
+                          growth=24,
                           bottleneck=4,
                           compression=.5)
             is_train = dn.is_train
@@ -302,7 +302,7 @@ for iteration in range(ENSEMBLE):
             dn = DenseNet(IMAGE_SHAPE,
                           num_classes=17,
                           keep_prob=KEEP_RATE,
-                          growth=32,
+                          growth=24,
                           bottleneck=4,
                           compression=.5)
             with tf.device('/gpu:0'):
