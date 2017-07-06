@@ -11,8 +11,7 @@ BATCH_SIZE = 96
 N_THREADS = 4
 # roughly 10 epochs of training data
 MAX_STEPS = 5000
-EPOCHS = 3
-# ALPHA = 5e-4
+EPOCHS = 5
 ALPHA = 5e-5
 BETA = 1e-2
 VALID_SIZE = 0.1
