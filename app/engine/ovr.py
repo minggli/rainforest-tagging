@@ -78,7 +78,7 @@ def vgg_16_train(class_balance, l2_norm):
     update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
     with tf.control_dependencies(update_ops):
         train_step = tf.train.RMSPropOptimizer(learning_rate=ALPHA,
-                                               decay=0.9,
+                                               decay=0.7,
                                                momentum=.5,
                                                epsilon=1e-10,
                                                use_locking=False,
