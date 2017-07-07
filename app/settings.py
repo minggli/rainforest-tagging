@@ -12,7 +12,7 @@ N_THREADS = 4
 # roughly 10 epochs of training data
 MAX_STEPS = 5000
 EPOCHS = 5
-ALPHA = 4e-5
+ALPHA = 5e-4
 BETA = 1e-2
 VALID_SIZE = 0.01
 KEEP_RATE = .8
