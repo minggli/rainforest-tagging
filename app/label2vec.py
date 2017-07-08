@@ -6,7 +6,7 @@ label2vec module produces label embeddings (Ul) as part of implementation of:
 CNN-RNN: A Unified Framework for Multi-label Image Classification
 Wang et al (2015)
 
-This is done using downsized (1m) GloVe vectors via Python NLP framework: spaCy
+This is done using downsized (1m) GloVe vectors via spaCy
 
 GloVe: Global Vectors for Word Representation
 Pennington et al (2014)
@@ -17,7 +17,7 @@ import spacy
 import collections
 
 
-class LabelVectorizer:
+class LabelVectorizer(object):
 
     def __init__(self):
         self._nlp = spacy.load('en_vectors_glove_md')

@@ -50,7 +50,7 @@ def vgg_16_train(class_balance, l2_norm):
     conv_12 = cnn.add_conv_layer(conv_11, [[3, 3, 256, 256], [256]])
     conv_13 = cnn.add_conv_layer(conv_12, [[3, 3, 256, 256], [256]])
     max_pool_5 = cnn.add_pooling_layer(conv_13)
-    dense_1 = cnn.add_dense_layer(max_pool_5, [[4 * 4 * 256, 2048], [2048]])
+    dense_1 = cnn.add_dense_layer(max_pool_5, [[9 * 9 * 256, 2048], [2048]])
     drop_out_1 = cnn.add_drop_out_layer(dense_1)
     dense_2 = cnn.add_dense_layer(drop_out_1, [[2048, 512], [512]])
     drop_out_2 = cnn.add_drop_out_layer(dense_2)
@@ -78,7 +78,7 @@ def vgg_16_train(class_balance, l2_norm):
     update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
     with tf.control_dependencies(update_ops):
         train_step = tf.train.RMSPropOptimizer(learning_rate=ALPHA,
-                                               decay=0.7,
+                                               decay=0.9,
                                                momentum=.5,
                                                epsilon=1e-10,
                                                use_locking=False,
@@ -115,7 +115,7 @@ def vgg_16_eval():
     conv_12 = cnn.add_conv_layer(conv_11, [[3, 3, 256, 256], [256]])
     conv_13 = cnn.add_conv_layer(conv_12, [[3, 3, 256, 256], [256]])
     max_pool_5 = cnn.add_pooling_layer(conv_13)
-    dense_1 = cnn.add_dense_layer(max_pool_5, [[4 * 4 * 256, 2048], [2048]])
+    dense_1 = cnn.add_dense_layer(max_pool_5, [[9 * 9 * 256, 2048], [2048]])
     drop_out_1 = cnn.add_drop_out_layer(dense_1)
     dense_2 = cnn.add_dense_layer(drop_out_1, [[2048, 512], [512]])
     drop_out_2 = cnn.add_drop_out_layer(dense_2)
