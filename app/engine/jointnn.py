@@ -13,7 +13,7 @@ Kiros et al (2014)
 
 import tensorflow as tf
 
-from __main__ import EVAL, TRAIN, ENSEMBLE
+# from __main__ import EVAL, TRAIN, ENSEMBLE
 from app.models.cnn import BasicCNN, DenseNet
 from app.settings import (IMAGE_PATH, IMAGE_SHAPE, BATCH_SIZE, MODEL_PATH,
                           MAX_STEPS, ALPHA, BETA, TAGS, TAGS_WEIGHTINGS, EXT,
@@ -22,32 +22,32 @@ from app.settings import (IMAGE_PATH, IMAGE_SHAPE, BATCH_SIZE, MODEL_PATH,
 from app.pipeline import data_pipe, generate_data_skeleton
 from app.controllers import (train, save_session, predict, restore_session,
                              submit)
-
-cnn = BasicCNN(IMAGE_SHAPE, 17, keep_prob=KEEP_RATE)
-
-conv_1 = cnn.add_conv_layer(image_feed, [[3, 3, IMAGE_SHAPE[-1], 32], [32]])
-conv_2 = cnn.add_conv_layer(conv_1, [[3, 3, 32, 32], [32]])
-max_pool_1 = cnn.add_pooling_layer(conv_2)
-conv_3 = cnn.add_conv_layer(max_pool_1, [[3, 3, 32, 64], [64]])
-conv_4 = cnn.add_conv_layer(conv_3, [[3, 3, 64, 64], [64]])
-max_pool_2 = cnn.add_pooling_layer(conv_4)
-conv_5 = cnn.add_conv_layer(max_pool_2, [[3, 3, 64, 128], [128]])
-conv_6 = cnn.add_conv_layer(conv_5, [[3, 3, 128, 128], [128]])
-conv_7 = cnn.add_conv_layer(conv_6, [[3, 3, 128, 128], [128]])
-max_pool_3 = cnn.add_pooling_layer(conv_7)
-conv_8 = cnn.add_conv_layer(max_pool_3, [[3, 3, 128, 256], [256]])
-conv_9 = cnn.add_conv_layer(conv_8, [[3, 3, 256, 256], [256]])
-conv_10 = cnn.add_conv_layer(conv_9, [[3, 3, 256, 256], [256]])
-max_pool_4 = cnn.add_pooling_layer(conv_10)
-conv_11 = cnn.add_conv_layer(max_pool_4, [[3, 3, 256, 256], [256]])
-conv_12 = cnn.add_conv_layer(conv_11, [[3, 3, 256, 256], [256]])
-conv_13 = cnn.add_conv_layer(conv_12, [[3, 3, 256, 256], [256]])
-max_pool_5 = cnn.add_pooling_layer(conv_13)
-dense_1 = cnn.add_dense_layer(max_pool_5, [[4 * 4 * 256, 2048], [2048]])
-drop_out_1 = cnn.add_drop_out_layer(dense_1)
-dense_2 = cnn.add_dense_layer(drop_out_1, [[2048, 512], [512]])
-drop_out_2 = cnn.add_drop_out_layer(dense_2)
-image_vector = cnn.add_read_out_layer(drop_out_2)
+#
+# cnn = BasicCNN(IMAGE_SHAPE, 17, keep_prob=KEEP_RATE)
+#
+# conv_1 = cnn.add_conv_layer(image_feed, [[3, 3, IMAGE_SHAPE[-1], 32], [32]])
+# conv_2 = cnn.add_conv_layer(conv_1, [[3, 3, 32, 32], [32]])
+# max_pool_1 = cnn.add_pooling_layer(conv_2)
+# conv_3 = cnn.add_conv_layer(max_pool_1, [[3, 3, 32, 64], [64]])
+# conv_4 = cnn.add_conv_layer(conv_3, [[3, 3, 64, 64], [64]])
+# max_pool_2 = cnn.add_pooling_layer(conv_4)
+# conv_5 = cnn.add_conv_layer(max_pool_2, [[3, 3, 64, 128], [128]])
+# conv_6 = cnn.add_conv_layer(conv_5, [[3, 3, 128, 128], [128]])
+# conv_7 = cnn.add_conv_layer(conv_6, [[3, 3, 128, 128], [128]])
+# max_pool_3 = cnn.add_pooling_layer(conv_7)
+# conv_8 = cnn.add_conv_layer(max_pool_3, [[3, 3, 128, 256], [256]])
+# conv_9 = cnn.add_conv_layer(conv_8, [[3, 3, 256, 256], [256]])
+# conv_10 = cnn.add_conv_layer(conv_9, [[3, 3, 256, 256], [256]])
+# max_pool_4 = cnn.add_pooling_layer(conv_10)
+# conv_11 = cnn.add_conv_layer(max_pool_4, [[3, 3, 256, 256], [256]])
+# conv_12 = cnn.add_conv_layer(conv_11, [[3, 3, 256, 256], [256]])
+# conv_13 = cnn.add_conv_layer(conv_12, [[3, 3, 256, 256], [256]])
+# max_pool_5 = cnn.add_pooling_layer(conv_13)
+# dense_1 = cnn.add_dense_layer(max_pool_5, [[4 * 4 * 256, 2048], [2048]])
+# drop_out_1 = cnn.add_drop_out_layer(dense_1)
+# dense_2 = cnn.add_dense_layer(drop_out_1, [[2048, 512], [512]])
+# drop_out_2 = cnn.add_drop_out_layer(dense_2)
+# image_vector = cnn.add_read_out_layer(drop_out_2)
 # [batch_size, 128] vector representation of image
 
 # using Tensorflow API first before using self-implemented lstm module
