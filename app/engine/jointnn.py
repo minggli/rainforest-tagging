@@ -19,6 +19,7 @@ from app.settings import (IMAGE_PATH, IMAGE_SHAPE, BATCH_SIZE, MODEL_PATH,
                           MAX_STEPS, ALPHA, BETA, TAGS, TAGS_WEIGHTINGS, EXT,
                           TAGS_THRESHOLDS, VALID_SIZE, KEEP_RATE, OUTPUT_PATH,
                           N_THREADS, AUGMENT)
+from app.label2vec import LabelVectorizer
 from app.pipeline import data_pipe, generate_data_skeleton
 from app.controllers import (train, save_session, predict, restore_session,
                              submit)
@@ -54,19 +55,20 @@ from app.controllers import (train, save_session, predict, restore_session,
 
 # label embedding in (17, 300)
 label_embedding = LabelVectorizer().fit(TAGS).transform()
+print(label_embedding)
 Ul = tf.constant(label_embedding, name='label_embedding')
 # word_vector = tf.nn.embedding_lookup(Ul, tf.where(tf.equal(label_feed, 1)))
-word_vector = tf.matmul(label_feed, Ul)
+# word_vector = tf.matmul(label_feed, Ul)
 # [batch_size * 17], [17, 300]
 # [batch_size, num_labels from 1 to 17, 300]
-
-weight_initializer = tf.truncated_normal_initializer(stddev=0.1)
-lstm_cell = tf.contrib.rnn.LSTMCell(num_units=300,
-                                    use_peepholes=False,
-                                    initializer=weight_initializer,
-                                    forget_bias=1.0,
-                                    activation=tf.tanh)
-output, final_state = tf.nn.dynamic_rnn(cell=lstm_cell,
-                                        inputs=img_vector,
-                                        sequence_length=None,
-                                        initial_state=lstm_cell.zero_state)
+#
+# weight_initializer = tf.truncated_normal_initializer(stddev=0.1)
+# lstm_cell = tf.contrib.rnn.LSTMCell(num_units=300,
+#                                     use_peepholes=False,
+#                                     initializer=weight_initializer,
+#                                     forget_bias=1.0,
+#                                     activation=tf.tanh)
+# output, final_state = tf.nn.dynamic_rnn(cell=lstm_cell,
+#                                         inputs=img_vector,
+#                                         sequence_length=None,
+#                                         initial_state=lstm_cell.zero_state)
