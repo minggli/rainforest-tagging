@@ -12,9 +12,9 @@ N_THREADS = 4
 # roughly 10 epochs of training data
 MAX_STEPS = 5000
 EPOCHS = 5
-ALPHA = 1e-4
+ALPHA = 5e-4
 BETA = 1e-2
-VALID_SIZE = 0.01
+VALID_SIZE = 0.1
 KEEP_RATE = .80
 
 # Ioffe and Szegedy 2015 suggests 5x learning rate with batch normalization
