@@ -51,12 +51,13 @@ drop_out_2 = cnn.add_drop_out_layer(dense_2)
 image_vector = cnn.add_read_out_layer(drop_out_2)
 # [batch_size, 300] vector representation of image
 
-# label embedding in (17, 300)
-# !!! need to re-order labels by frequency from alphabetic order
+# !!! TODO need to re-order labels by frequency from default alphabetic order
 label_embedding = LabelVectorizer().fit(TAGS).transform()
 Ul = tf.constant(label_embedding, name='label_embedding_matrix')
+# Ul label embedding in (17, 300)
+
 word_vector = tf.nn.embedding_lookup(Ul, tf.where(tf.equal(label_feed, 1)))
-# [batch_size, num_labels, 300]
+# word_vector in shape [batch_size, num_labels, 300]
 init = tf.truncated_normal_initializer(stddev=.1)
 Uo = tf.get_variable(name='projection_matrix_rnn',
                      shape=[None, 300],
@@ -64,7 +65,6 @@ Uo = tf.get_variable(name='projection_matrix_rnn',
 Ui = tf.get_variable(name='projection_matrix_cnn',
                      shape=[None, 300],
                      initializer=init)
-
 
 # require sequence to sequence configuration of LSTM to take previosuly
 # predicted label (t - 1) as input for t
@@ -77,11 +77,13 @@ with tf.device('/gpu:0'):
                                              encoder_inputs=,
                                              decoder_inputs=,
                                              cell=cell,
-                                             inputs=word_vectors,
-                                             sequence_length=sent_length,
-                                             dtype=tf.float32)
+                                            num_encoder_symbols=enc_vocab_size+1,
+                                            num_decoder_symbols=dec_vocab_size+2,
+                                            embedding_size=enc_emb_size,
+                                            feed_previous=True)
     # last = find_last(outputs, sent_length)
-    logits = tf.matmul(last, W_softmax) + b_softmax
+    # calculate simiarity per class between embedding matrix and prediction
+    simiarity = Ul * last
 
     cross_entropy = tf.nn.softmax_cross_entropy_with_logits(logits=logits,
                                                             labels=label_feed)
