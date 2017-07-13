@@ -78,7 +78,7 @@ class _BaseCNN(object):
         """feature set"""
         warnings.warn("using placeholder to feed data will causing low "
                       "efficiency between Python and C++ interface",
-                      DeprecationWarning)
+                      RuntimeWarning)
         return tf.placeholder(dtype=tf.float32,
                               # transform 3D shape to 4D to include batch size
                               shape=(None, ) + self._shape,
@@ -89,7 +89,7 @@ class _BaseCNN(object):
         """ground truth, in one-hot format"""
         warnings.warn("using placeholder to feed data will causing low "
                       "efficiency between Python and C++ interface",
-                      DeprecationWarning)
+                      RuntimeWarning)
         return tf.placeholder(dtype=tf.float32,
                               shape=(None, self._n_class),
                               name='label')
