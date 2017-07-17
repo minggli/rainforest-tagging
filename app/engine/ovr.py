@@ -216,13 +216,6 @@ def vgg_16_eval():
 #     saver = tf.train.Saver(max_to_keep=5, var_list=tf.global_variables())
 
 
-train_file_array, train_label_array, valid_file_array, valid_label_array = \
-                    generate_data_skeleton(root_dir=IMAGE_PATH + 'train',
-                                           valid_size=VALID_SIZE, ext=EXT)
-test_file_array, dummy_label_array = \
-                    generate_data_skeleton(root_dir=IMAGE_PATH + 'test',
-                                           valid_size=None, ext=EXT)
-
 ensemble_probs = list()
 
 for iteration in range(ENSEMBLE):
@@ -230,6 +223,12 @@ for iteration in range(ENSEMBLE):
         tf.reset_default_graph()
         with tf.Session(config=tf.ConfigProto(allow_soft_placement=True)) \
                 as sess, tf.device('/cpu:0'):
+
+            train_file_array, train_label_array, \
+                valid_file_array, valid_label_array = \
+                generate_data_skeleton(root_dir=IMAGE_PATH + 'train',
+                                       valid_size=VALID_SIZE, ext=EXT)
+
             train_image_batch, train_label_batch = data_pipe(
                                                         train_file_array,
                                                         train_label_array,
@@ -285,6 +284,11 @@ for iteration in range(ENSEMBLE):
         tf.reset_default_graph()
         with tf.Session(config=tf.ConfigProto(allow_soft_placement=True)) \
                 as sess, tf.device('/cpu:0'):
+
+            test_file_array, dummy_label_array = \
+                        generate_data_skeleton(root_dir=IMAGE_PATH + 'test',
+                                               valid_size=None, ext=EXT)
+
             test_image_batch, _ = data_pipe(
                                                         test_file_array,
                                                         dummy_label_array,
